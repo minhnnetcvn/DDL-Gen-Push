@@ -25,7 +25,7 @@ export async function GET() {
 export async function PUT(request: Request) {
     try {
         const etlConfigData = await request.json();
-        console.log("Received ETL Config Data for Update:", etlConfigData);
+        // console.log("Received ETL Config Data for Update:", etlConfigData);
         return new Response(JSON.stringify({ success: true, message: "ETL config updated successfully." }), { status: 200 });
     }
     catch (error: any) {
@@ -37,7 +37,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {    
     try {
         const etlConfigData = await request.json();
-        console.log("Received ETL Config Data for Deletion:", etlConfigData);
+        // console.log("Received ETL Config Data for Deletion:", etlConfigData);
         return new Response(JSON.stringify({ success: true, message: "ETL config deleted successfully." }), { status: 200 });
     }
     catch (error: any) {

@@ -41,6 +41,44 @@ export default function DBExplorerPage() {
     setDbConfigured(true)
   }
 
+  const handleRowClick = (rowId: number) => {
+  const confirmDelete = confirm(`Do you want to delete row ID #${rowId}?`);
+  if (confirmDelete) {
+      fetch(`/api/etl_config_table/${rowId}`, {
+          method: 'DELETE',
+
+          body: JSON.stringify({
+            poolCredentials: {
+              host: dbData.host,
+              port: dbData.port,
+              user: dbData.username,
+              password: dbData.password,
+              db: dbData.database,
+              tableName: dbData.tableName,
+            },
+          }),
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              alert(`ETL Config ID #${rowId} deleted successfully.`);
+              // Optionally, you can add logic to refresh the table or remove the row from the UI
+              setResults(prev => prev.filter(item => item.id !== rowId));
+          } else {
+              alert(`Failed to delete ETL Config ID #${rowId}: ${data.error}`);
+          }
+      })
+      .catch(error => {
+          console.error('Error deleting ETL Config:', error);
+          alert(`An error occurred while deleting ETL Config ID #${rowId}.`);
+      })
+      .finally(() => {
+          // Any cleanup actions if necessary
+          console.log('Delete request ran.');
+      });
+  }
+}
+
   const handleQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsQuerying(true)
@@ -257,7 +295,7 @@ export default function DBExplorerPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ETLConfigTable data={results} />
+                  <ETLConfigTable data={results} onRowClick={handleRowClick} />
                 </CardContent>
               </Card>
             )}

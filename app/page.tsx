@@ -103,28 +103,28 @@ export default function HomePage() {
       })
       .then(res => res.json())
       .then(data => {
-        console.log("Received data:", data);
+        // console.log("Received data:", data);
 
         data = typeof data === "string" ? JSON.parse(data) : data // Handle stringified JSON;
 
         if(data.sqlContentGold) {
           const sqlContentGold = data.sqlContentGold;
           setSQLContentGold(sqlContentGold);
-          console.log("Gold SQL Content:", sqlContentGold);
+          // console.log("Gold SQL Content:", sqlContentGold);
         }
 
         if(data.sqlContentSilver) {
           const sqlContentSilver = data.sqlContentSilver;
           setSQLContentSilver(sqlContentSilver);
-          console.log("Silver SQL Content:", sqlContentSilver);
+          // console.log("Silver SQL Content:", sqlContentSilver);
         }
         
         if (data.schema) {
           const goldDDL = data.goldSql;
           setGoldDDL(goldDDL);
-          console.log("Gold DDL:", goldDDL);
+          // console.log("Gold DDL:", goldDDL);
           const schema : SchemaMap = data.schema;
-          console.log(schema);
+          // console.log(schema);
 
           Object.entries(schema).forEach(([columnName, columnType], idx) => {
             addRow(columnName, columnType, "NONE");
@@ -203,7 +203,7 @@ export default function HomePage() {
       .then(res => res.json())
       .then(data => {
         setSQLContentGold(data.sqlContentGold);
-        console.log(data);
+        // console.log(data);
       });
 
       toast({
@@ -242,16 +242,14 @@ export default function HomePage() {
         })
         .then(res => res.json())
         .then(data => {
-          console.log("ETL Config submission response:", data);
+          toast({
+            title: "Success",
+            description: "PostgreSQL configuration submitted successfully!",
+          })
         });
       } catch (error) {
         console.log("Error submitting ETL config:", error);
       }
-
-      toast({
-        title: "Success",
-        description: "PostgreSQL configuration submitted successfully!",
-      })
 
       console.log("PostgreSQL data:", postgresData)
     } catch (error: any) {

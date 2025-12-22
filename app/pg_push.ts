@@ -10,7 +10,7 @@ export const pool = new Pool({
   ssl: false // true if using cloud PG
 })
 
-import { pool } from './db'
+import { pool } from '@/lib/db'
 
 async function insertConfigRow() {
   const sql = `

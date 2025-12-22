@@ -18,7 +18,7 @@ export async function POST(request: Request) {
             let goldDDL = buildGoldDDL(Data.columns, DDLTemplate, dimensionDDL, aggregateDDL);
             let transformSQL = transformSQLContent(dimensionSQL, aggregateSQL);
             const output = buildGoldConfig(SqlContentGold, goldDDL, transformSQL);
-            console.log(goldDDL);
+            // console.log(goldDDL);
             // console.log(transformSQL);
             resolve({success: true, output: output});
         })
