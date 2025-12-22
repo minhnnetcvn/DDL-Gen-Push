@@ -11,20 +11,31 @@ import { Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ColumnRow, type ColumnRowData } from "@/components/column-row"
 import { SchemaMap } from "@/types/SchemaMap"
+import validateField from "./helper/validateField"
 
 export default function HomePage() {
   const { toast } = useToast()
 
-  const [silverDLL, setSilverDLL] = useState("")
-  const [goldDLL, setGoldDLL] = useState("")
-
+  const [goldDDL, setGoldDDL] = useState("")
+  const [sqlContentGold, setSQLContentGold] = useState("")
+  const [sqlContentSilver, setSQLContentSilver] = useState("")
 
   const [showColumnForm, setShowColumnForm] = useState(false)
+  const [showPostgresForm, setShowPostgresForm] = useState(false)
   const [schemaData, setSchemaData] = useState({
     schemaRegistryUrl: "",
     tableName: "",
     option: "",
   })
+
+  const [postgresData, setPostgresData] = useState({
+    host: "10.8.75.82",
+    port: "5432",
+    user: "postgres",
+    password: "postgres",
+    databaseName: "postgres",
+  })
+  const [isSubmittingPostgres, setIsSubmittingPostgres] = useState(false)
 
   const [formData, setFormData] = useState({
     schemaRegistryUrl: "10.8.75.82:8081",
@@ -39,32 +50,6 @@ export default function HomePage() {
 
   const [rows, setRows] = useState<ColumnRowData[]>([])
   const [isSubmittingColumns, setIsSubmittingColumns] = useState(false)
-
-  const patterns = {
-    schemaRegistryUrl:
-      /^(https?:\/\/)?(localhost|[\d]{1,3}\.[\d]{1,3}\.[\d]{1,3}\.[\d]{1,3}|[a-zA-Z0-9.-]+)(:\d{1,5})$/,
-    tableName: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
-  }
-
-  const validateField = (name: string, value: string) => {
-    if (!value.trim()) {
-      return `${name.replace(/([A-Z])/g, " $1").trim()} is required`
-    }
-
-    switch (name) {
-      case "schemaRegistryUrl":
-        if (!patterns.schemaRegistryUrl.test(value)) {
-          return "Enter a valid URL with port (e.g., localhost:8080 or 192.168.1.1:9092)"
-        }
-        break
-      case "tableName":
-        if (!patterns.tableName.test(value)) {
-          return "Table name must start with a letter or underscore and contain only alphanumeric characters and underscores"
-        }
-        break
-    }
-    return ""
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -118,20 +103,32 @@ export default function HomePage() {
       })
       .then(res => res.json())
       .then(data => {
-        data = JSON.parse(data);
         console.log("Received data:", data);
+
+        data = typeof data === "string" ? JSON.parse(data) : data // Handle stringified JSON;
+
+        if(data.sqlContentGold) {
+          const sqlContentGold = data.sqlContentGold;
+          setSQLContentGold(sqlContentGold);
+          console.log("Gold SQL Content:", sqlContentGold);
+        }
+
+        if(data.sqlContentSilver) {
+          const sqlContentSilver = data.sqlContentSilver;
+          setSQLContentSilver(sqlContentSilver);
+          console.log("Silver SQL Content:", sqlContentSilver);
+        }
+        
         if (data.schema) {
-          const silverDLL = data.silverSql;
-          const goldDLL = data.goldSql;
-          setSilverDLL(silverDLL);
-          setGoldDLL(goldDLL);
-          console.log("Gold DDL:", goldDLL);
+          const goldDDL = data.goldSql;
+          setGoldDDL(goldDDL);
+          console.log("Gold DDL:", goldDDL);
           const schema : SchemaMap = data.schema;
           console.log(schema);
 
           Object.entries(schema).forEach(([columnName, columnType], idx) => {
             addRow(columnName, columnType, "NONE");
-            console.log(`Added row ${idx}: ${columnName} - ${columnType}`);
+            // Add row
           });
         }
       })
@@ -193,7 +190,8 @@ export default function HomePage() {
       fetch("/api/gen_gold", {
         method: "POST",
         body: JSON.stringify({
-          goldDLL: goldDLL,
+          sqlContentGold: sqlContentGold,
+          goldDDL: goldDDL,
           columns: rows.map((row) => ({
             name: row.columnName,
             type: row.type,
@@ -204,12 +202,8 @@ export default function HomePage() {
       })
       .then(res => res.json())
       .then(data => {
+        // Gold Response
         console.log("Received data:", data);
-        if (data.goldSql) {
-          const goldDLL = data.goldSql;
-          setGoldDLL(goldDLL);
-          console.log("Gold DDL:", goldDLL);
-        }
       });
 
       toast({
@@ -217,7 +211,7 @@ export default function HomePage() {
         description: `Submitted ${rows.length} column(s) configuration`,
       })
 
-      console.log("Schema data:", schemaData)
+      setShowPostgresForm(prev => true)
     } catch (error: any) {
       toast({
         title: "Error",
@@ -230,17 +224,59 @@ export default function HomePage() {
     }
   }
 
+  const handlePostgresSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmittingPostgres(true)
+
+    try {
+      // Connect DB and submit ETL config
+      try {
+        fetch("/api/submit_etl_config", {
+          method: "POST",
+          body: JSON.stringify({
+            poolCredentials: postgresData,
+            sqlContentGold: sqlContentGold,
+            sqlContentSilver: sqlContentSilver,
+          }),
+          headers: { "Content-Type": "application/json" },
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log("ETL Config submission response:", data);
+        });
+      } catch (error) {
+        console.log("Error submitting ETL config:", error);
+      }
+
+      toast({
+        title: "Success",
+        description: "PostgreSQL configuration submitted successfully!",
+      })
+
+      console.log("PostgreSQL data:", postgresData)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process PostgreSQL configuration",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmittingPostgres(false)
+    }
+  }
+
+
   return (
     <main className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Schema Configuration</h1>
-          <p className="text-muted-foreground text-lg">Configure schema registry and column mappings</p>
+          <h1 className="text-4xl font-bold tracking-tight">ETL Table Create</h1>
+          <p className="text-muted-foreground text-lg">Create Table for ETL Config</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Schema Registry Form</CardTitle>
+            <CardTitle>Schema Registry</CardTitle>
             <CardDescription>Configure schema registry with URL, table name, and option validation</CardDescription>
           </CardHeader>
           <CardContent>
@@ -356,6 +392,74 @@ export default function HomePage() {
                     {isSubmittingColumns ? "Submitting..." : "Submit Configuration"}
                   </Button>
                 </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {showPostgresForm && (
+          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CardHeader>
+              <CardTitle>PostgreSQL Configuration</CardTitle>
+              <CardDescription>Enter connection details for your PostgreSQL database</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePostgresSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="host">Host</Label>
+                    <Input
+                      id="host"
+                      placeholder="localhost or 192.168.1.1"
+                      value={postgresData.host}
+                      onChange={(e) => setPostgresData({ ...postgresData, host: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="port">Port</Label>
+                    <Input
+                      id="port"
+                      placeholder="5432"
+                      value={postgresData.port}
+                      onChange={(e) => setPostgresData({ ...postgresData, port: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="user">User</Label>
+                    <Input
+                      id="user"
+                      placeholder="postgres"
+                      value={postgresData.user}
+                      onChange={(e) => setPostgresData({ ...postgresData, user: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={postgresData.password}
+                      onChange={(e) => setPostgresData({ ...postgresData, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-span-full space-y-2">
+                    <Label htmlFor="databaseName">Database Name</Label>
+                    <Input
+                      id="databaseName"
+                      placeholder="my_database"
+                      value={postgresData.databaseName}
+                      onChange={(e) => setPostgresData({ ...postgresData, databaseName: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isSubmittingPostgres}>
+                  {isSubmittingPostgres ? "Connecting..." : "Submitting ETL Config"}
+                </Button>
               </form>
             </CardContent>
           </Card>

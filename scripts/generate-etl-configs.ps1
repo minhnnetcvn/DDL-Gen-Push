@@ -165,6 +165,151 @@ TBLPROPERTIES (
   return $ddl
 }
 
+function Generate-SilverConfig {
+    param([string]$TableNameUpper, [string]$TableNameLower, [object]$Schema)
+    
+    # Auto-detect primary key if not provided
+    $pkColumn = $PrimaryKeyColumn
+    if ([string]::IsNullOrEmpty($pkColumn)) {
+        # Try common patterns
+        $commonPkPatterns = @("_id", "id", "key", "_key")
+        foreach ($pattern in $commonPkPatterns) {
+            $found = $Schema.fields | Where-Object { $_.name -like "*$pattern" }
+            if ($found) {
+                $pkColumn = $found[0].name
+                break
+            }
+        }
+        
+        if ([string]::IsNullOrEmpty($pkColumn)) {
+            $pkColumn = $Schema.fields[0].name
+            Write-Warning "No primary key specified, using first field: $pkColumn"
+        }
+    }
+    
+    $ddl = Generate-SilverDDL -Schema $Schema -TableNameLower $TableNameLower
+    
+    # Escape single quotes in DDL for SQL
+    $ddlEscaped = $ddl.Replace("'", "''")
+    
+    $sql = @"
+-- ============================================================================
+-- SILVER LAYER CONFIG - $TableNameUpper
+-- Generated at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+-- Schema Registry: $SchemaRegistryUrl
+-- Subject: altibase_raw-$TableNameUpper
+-- Total fields: $($Schema.fields.Count)
+-- ============================================================================
+
+INSERT INTO etl_table_config (
+    layer,
+    source_table_name,
+    target_table_name,
+    source_table_full_name,
+    target_table_full_name,
+    target_table_ddl,
+    target_partition_spec,
+    primary_key_columns,
+    order_by_column,
+    order_by_direction,
+    enabled,
+    batch_size,
+    processing_interval_minutes,
+    processing_mode,
+    description,
+    tags,
+    created_by
+) VALUES (
+    'silver',
+    '$TableNameUpper',
+    '$TableNameLower',
+    'ice.bronze.altibase_raw',
+    'ice.silver.$TableNameLower',
+    '$ddlEscaped',
+    'year,month,day,hour',
+    '$pkColumn',
+    'offset',
+    'DESC',
+    TRUE,
+    10000,
+    60,
+    'batch',
+    'Silver table for $TableNameUpper - cleaned and deduped from Bronze',
+    'silver,fact,daily',
+    '$CreatedBy'
+) ON CONFLICT (layer, source_table_name) DO UPDATE SET
+    target_table_ddl = EXCLUDED.target_table_ddl,
+    target_partition_spec = EXCLUDED.target_partition_spec,
+    primary_key_columns = EXCLUDED.primary_key_columns,
+    updated_at = CURRENT_TIMESTAMP,
+    updated_by = '$CreatedBy';
+
+"@
+    
+    return $sql
+}
+
+function Generate-GoldConfig {
+    param([string]$TableNameUpper, [string]$TableNameLower, [object]$Schema)
+    
+    # Escape single quotes
+    $sql = @"
+-- ============================================================================
+-- GOLD LAYER CONFIG (FACT TABLE) - $TableNameUpper
+-- Generated at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+-- Source: ice.silver.$TableNameLower
+-- Target: ice.gold.fact_$TableNameLower
+-- ============================================================================
+
+INSERT INTO etl_table_config (
+    layer,
+    source_table_name,
+    target_table_name,
+    source_table_full_name,
+    target_table_full_name,
+    target_table_ddl,
+    target_partition_spec,
+    primary_key_columns,
+    transform_sql,
+    enabled,
+    batch_size,
+    processing_interval_minutes,
+    processing_mode,
+    depends_on_tables,
+    description,
+    tags,
+    created_by
+) VALUES (
+    'gold',
+    '$TableNameLower',
+    'fact_$TableNameLower',
+    'ice.silver.$TableNameLower',
+    'ice.gold.fact_$TableNameLower',
+    '{{GoldDDL}}',
+    'year,month,day,hour',
+    'year,month,day,hour',  -- TODO: Replace with actual composite PK (dimension columns + partition)
+    '{{TransformSQL}}',
+    TRUE,
+    NULL,
+    60,
+    'batch',
+    'ice.silver.$TableNameLower',
+    'Gold fact table - aggregated metrics from $TableNameLower',
+    'gold,fact,aggregation,hourly',
+    '$CreatedBy'
+) ON CONFLICT (layer, source_table_name) DO UPDATE SET
+    target_table_ddl = EXCLUDED.target_table_ddl,
+    target_partition_spec = EXCLUDED.target_partition_spec,
+    transform_sql = EXCLUDED.transform_sql,
+    updated_at = CURRENT_TIMESTAMP,
+    updated_by = '$CreatedBy';
+
+"@
+    
+    return $sql
+}
+
+
 function Get-SchemaColumnTypeMap {
   param([object]$Schema)
 
@@ -199,15 +344,21 @@ $schemaMap = Get-SchemaColumnTypeMap -Schema $schema
 # Generate DDLs conditionally
 $silverDDL = $null
 $goldDDL   = $null
+$sqlContentSilver = $null
+$sqlContentGold   = $null
 
 if (-not $GoldOnly) {
   Write-Verbose "Generating Silver DDL..."
   $silverDDL = Generate-SilverDDL -Schema $schema -TableNameLower $TableNameLower
+  $silverSql = Generate-SilverConfig -TableNameUpper $TableNameUpper -TableNameLower $TableNameLower -Schema $schema
+  $sqlContentSilver += $silverSql
 }
 
 if (-not $SilverOnly) {
   Write-Verbose "Generating Gold DDL..."
   $goldDDL = Generate-GoldDDL -Schema $schema -TableNameLower $TableNameLower
+  $goldSql = Generate-GoldConfig -TableNameUpper $TableNameUpper -TableNameLower $TableNameLower -Schema $schema
+  $sqlContentGold += $goldSql
 }
 
 # Compose final JSON object
@@ -217,6 +368,8 @@ $result = [PSCustomObject]@{
   schema         = $schemaMap           # map of column → Spark type
   silverSql      = $silverDDL           # Silver DDL (null if -GoldOnly)
   goldSql        = $goldDDL             # Gold DDL (null if -SilverOnly)
+  sqlContentSilver = $sqlContentSilver
+  sqlContentGold = $sqlContentGold
   createdBy      = $CreatedBy
   registryUrl    = $SchemaRegistryUrl
   subject        = $subject

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "..\\next-js-forms\\scripts\\generate-etl-configs-with-schema.ps1",
+        "..\\next-js-forms\\scripts\\generate-etl-configs.ps1",
         "-SchemaRegistryUrl",
         data.schemaRegistryUrl,
         "-TableName",
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     })
 
     if (result.success) {
-      return NextResponse.json(result.output)
+      return NextResponse.json(JSON.parse(result.output || "{}"))
     } else {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
     }

@@ -4,20 +4,33 @@ import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
     try {
-        const data = await request.json()
-        console.log(data);
+        const Data = await request.json()
+
+        // DDL column type
+        // SQL Column only or aggregate as alias
+
+        const { dimensionSQL, aggregateSQL, dimensionDDL, aggregateDDL } = generateColumnSQL(Data.columns)
+        const SqlContentGold = Data.sqlContentGold
+        const DDLTemplate = Data.goldDDL
+
+
         const result = await new Promise<{ success: boolean; output?: string; error?: string }>((resolve, reject) => {
-          const output = buildCreateTableSQL(data.columns, data.goldDLL)
-          resolve({ success: true, output: output })
+            let goldDDL = buildGoldDDL(Data.columns, DDLTemplate, dimensionDDL, aggregateDDL);
+            let transformSQL = transformSQLContent(dimensionSQL, aggregateSQL);
+            const output = buildGoldConfig(SqlContentGold, goldDDL, transformSQL);
+            console.log(goldDDL);
+            // console.log(transformSQL);
+            resolve({success: true, output: output});
         })
 
         if (result.success) {
-            return NextResponse.json(result.output)
+            return NextResponse.json(result.output);
         } else {
-            return NextResponse.json({ success: false, error: result.error }, { status: 500 })
+            return NextResponse.json({ success: false, error: result.error }, { status: 500 });
         }
     } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+      console.error(error.message? error.message : error);
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 }
 
@@ -26,37 +39,96 @@ function buildAggregateColumnName(
   agg: string,
   columnName: string
 ) {
-  return `${agg.toLowerCase()}_${columnName}`
+  // return `${agg.toLowerCase()}_${columnName}`
+  return `${columnName}`
+}
+
+function buildAggregateSelect(
+  agg: string,
+  columnName: string
+) {
+  return `${agg.toUpperCase()}(${columnName}) AS ${buildAggregateColumnName(agg, columnName)}`
 }
 
 function generateColumnSQL(columns: ColumnDef[]) {
   const dimensions: string[] = []
   const aggregates: string[] = []
+  const aggregateSQL: string[] = []
+  let dimensionSQL: string[] = []
 
   for (const col of columns) {
     if (!col.aggregate) {
       // dimension
       dimensions.push(`  ${col.name} ${col.type}`)
+      dimensionSQL.push(col.name)
     } else {
       // aggregate
-      const aggColName = buildAggregateColumnName(col.aggregate, col.name)
+      const aggSelect = buildAggregateSelect(col.aggregate, col.name)
+      aggregateSQL.push(aggSelect)
 
       aggregates.push(
-        `  ${aggColName} ${col.type},  -- ${col.aggregate}(${col.name})`
+        `  ${col.name} ${col.type},  -- ${col.aggregate}(${col.name})`
       )
     }
   }
 
   return {
-    dimensionSQL: dimensions.join(',\n'),
-    aggregateSQL: aggregates.join(',\n')
+    dimensionSQL: dimensionSQL.join(',\n'),
+    aggregateSQL: aggregateSQL.join(',\n'),
+    dimensionDDL: dimensions.join(',\n'),
+    aggregateDDL: aggregates.join(',\n')
   }
 }
 
-function buildCreateTableSQL(columns: ColumnDef[], table_template: string): string {
-  const { dimensionSQL, aggregateSQL } = generateColumnSQL(columns)
+function buildGoldDDL(columns: ColumnDef[], table_template: string, dimensionDDL: string, aggregateDDL: string): string {
 
   return table_template
-    .replace('{{DIMENSIONS}}', dimensionSQL || '  -- none')
-    .replace('{{AGGREGATES}}', aggregateSQL || '  -- none')
+    .replace('{{DIMENSIONS}}', dimensionDDL || '  -- none')
+    .replace('{{AGGREGATES}}', aggregateDDL || '  -- none')
+}
+
+function transformSQLContent(dimensionSQL: string, aggregateSQL: string): string {
+  // Example transformation: Trim whitespace and convert to uppercase
+  let transformSqlTemplate = `
+      SELECT 
+              -- TODO: Define dimension columns (must match DDL)
+              -- dimension1,
+              -- dimension2,
+              ${dimensionSQL}
+
+              -- TODO: Define aggregated metrics (must match DDL)
+              -- SUM(amount) as total_amount,
+              -- COUNT(*) as total_count,
+              -- AVG(amount) as avg_amount,
+              ${aggregateSQL}
+              
+              -- Partition columns (REQUIRED in SELECT and GROUP BY)
+              year,
+              month,
+              day,
+              hour
+          FROM ice.silver.$TableNameLower
+          WHERE year = '\${year}' 
+            AND month = '\${month}' 
+            AND day = '\${day}'
+            AND hour = '\${hour}'
+          GROUP BY 
+              -- TODO: Define dimension columns (must match SELECT)
+              -- dimension1,
+              -- dimension2,
+              ${dimensionSQL},
+              -- Partition columns (REQUIRED in SELECT and GROUP BY)
+              year,
+              month,
+              day,
+              hour
+      `;
+  return transformSqlTemplate.trim().toUpperCase();
+}
+
+
+function buildGoldConfig(SqlContentGold: string, goldDDL: string, transformSQL: string): string {
+  return SqlContentGold
+    .replace('{{GoldDDL}}', goldDDL || '  -- none')
+    .replace('{{TransformSQL}}', transformSQL || '  -- none')
 }
