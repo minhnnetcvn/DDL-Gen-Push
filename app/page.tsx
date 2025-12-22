@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ColumnRow, type ColumnRowData } from "@/components/column-row"
 import { SchemaMap } from "@/types/SchemaMap"
 import validateField from "./helper/validateField"
+import { v4 as uuidv4 } from 'uuid';
 
 export default function HomePage() {
   const { toast } = useToast()
@@ -71,7 +72,7 @@ export default function HomePage() {
   }
 
   const addRow = (aColumnName="", aType="", aAggregateMethod="") => {
-    setRows(prevRows => [...prevRows, { id: crypto.randomUUID(), columnName: aColumnName, type: aType, aggregateMethod: aAggregateMethod }])
+    setRows(prevRows => [...prevRows, { id: uuidv4() /*crypto.randomUUID()*/, columnName: aColumnName, type: aType, aggregateMethod: aAggregateMethod }])
   }
 
   const handleSchemaSubmit = async (e: React.FormEvent) => {

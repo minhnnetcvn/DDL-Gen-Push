@@ -13,7 +13,8 @@ export async function POST(request: Request) {
             OR target_table_name ILIKE \'%${queryData.tableName}%\'
             OR source_table_full_name ILIKE \'%${queryData.tableName}%\'
             OR target_table_full_name ILIKE \'%${queryData.tableName}%\';` : ""}
-            ${queryData.layer === "all" ? "" : `AND layer = \'${queryData.layer}\'`}
+            ${queryData.tableName !== "" ? ' AND ' : ''}
+            ${queryData.layer === "all" ? "" : `layer = \'${queryData.layer}\'`}
             `
         )
         .then((res) => {
