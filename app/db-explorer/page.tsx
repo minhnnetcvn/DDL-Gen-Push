@@ -16,11 +16,10 @@ export default function DBExplorerPage() {
   const [dbConfigured, setDbConfigured] = useState(false)
   const [isQuerying, setIsQuerying] = useState(false)
   const [results, setResults] = useState<ETLConfig[]>([])
-
   const [dbData, setDbData] = useState({
     host: "10.8.75.82",
     port: "5432",
-    user: "postgres",
+    username: "postgres",
     password: "postgres",
     database: "postgres",
     tableName: "etl_table_config",
@@ -33,7 +32,8 @@ export default function DBExplorerPage() {
 
   const handleDbSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual connection validation logic here
+    // Create a new pool instance
+
     toast({
       title: "Connection Successful",
       description: `Connected to ${dbData.database} on ${dbData.host}`,
@@ -48,40 +48,44 @@ export default function DBExplorerPage() {
     try {
       // TODO: Implement actual DB query logic using your PostgreSQL configuration
       // This would typically involve a server action or API call to fetch data based on filters
-      await new Promise((resolve) => setTimeout(resolve, 1200))
+      try {
+        fetch("/api/etl_config_table", {
+          method: "POST",
+          body: JSON.stringify({
+            poolCredentials: {
+              host: dbData.host,
+              port: dbData.port,
+              user: dbData.username,
+              password: dbData.password,
+              db: dbData.database,
+              tableName: dbData.tableName,
+            },
+            queryFilters: queryData,
+          }),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("ETL Config Query Results:", data);
+          if (data.success) {
+            setResults(data.data);
+          } else {
+            toast({
+              title: "Query Failed",
+              description: data.error,
+              variant: "destructive",
+            })
+          }
+        });
+      }
+      catch (error) {
+        console.error("Error querying ETL configs:", error);
+      };
 
       // Mock data matching the schema from varchar.ts
-      const mockResults: ETLConfig[] = [
-        {
-          id: 1,
-          layer: "Gold",
-          source_table_name: "raw_users",
-          target_table_name: "dim_users",
-          source_table_full_name: "raw.raw_users",
-          target_table_full_name: "gold.dim_users",
-          enabled: true,
-          processing_mode: "batch",
-          last_run_status: "SUCCESS",
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          layer: "Silver",
-          source_table_name: "crm_leads",
-          target_table_name: "stg_leads",
-          source_table_full_name: "raw.crm_leads",
-          target_table_full_name: "silver.stg_leads",
-          enabled: true,
-          processing_mode: "incremental",
-          last_run_status: "FAILED",
-          updated_at: new Date().toISOString(),
-        },
-      ]
 
-      setResults(mockResults)
       toast({
         title: "Query Complete",
-        description: `Found ${mockResults.length} records matching your criteria.`,
+        description: `Found records matching your criteria.`,
       })
     } catch (error: any) {
       toast({
@@ -106,13 +110,13 @@ export default function DBExplorerPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-1 h-fit">
+          <Card className="lg:col-span-3 h-fit">
             <CardHeader>
               <CardTitle>PostgreSQL Config</CardTitle>
               <CardDescription>Database connection settings</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleDbSubmit} className="space-y-4">
+              <form onSubmit={handleDbSubmit} className="space-y-2">
                 <div className="space-y-2">
                   <Label htmlFor="host">Host</Label>
                   <Input
@@ -124,7 +128,7 @@ export default function DBExplorerPage() {
                     disabled={dbConfigured}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="port">Port</Label>
                     <Input
@@ -195,7 +199,7 @@ export default function DBExplorerPage() {
             </CardContent>
           </Card>
 
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-9 space-y-8">
             <Card className={!dbConfigured ? "opacity-50 pointer-events-none" : ""}>
               <CardHeader>
                 <CardTitle>Query Filters</CardTitle>
@@ -243,9 +247,9 @@ export default function DBExplorerPage() {
                 </form>
               </CardContent>
             </Card>
-
-            {results.length > 0 && (
-              <Card className="animate-in fade-in slide-in-from-top-4 duration-500">
+          </div>
+          {results.length > 0 && (
+              <Card className="animate-in fade-in slide-in-from-top-4 duration-500 col-span-12">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle>Results</CardTitle>
@@ -257,7 +261,6 @@ export default function DBExplorerPage() {
                 </CardContent>
               </Card>
             )}
-          </div>
         </div>
       </div>
     </main>

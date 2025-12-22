@@ -158,8 +158,8 @@ CREATE TABLE IF NOT EXISTS ice.gold.fact_$TableNameLower (
 USING iceberg
 PARTITIONED BY (year, month, day, hour)
 TBLPROPERTIES (
-  'write.parquet.compression-codec'='snappy',
-  'write.target-file-size-bytes'='268435456'
+  ''''write.parquet.compression-codec''''=''''snappy'''',
+  ''''write.target-file-size-bytes''''=''''268435456''''
 )
 "@
   return $ddl

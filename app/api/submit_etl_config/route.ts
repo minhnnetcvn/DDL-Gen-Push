@@ -3,7 +3,7 @@ import { pool } from "@/lib/db";
 export async function POST(request: Request) {
     try {
         const {poolCredentials: postgresData, sqlContentSilver, sqlContentGold} = await request.json();
-        // console.log("Received ETL Config Data:", postgresData);
+        // console.log("Received ETL Config Data:", sqlContentSilver, sqlContentGold);
 
 
         await pool(postgresData.host, postgresData.port, postgresData.user, postgresData.password, postgresData.db).query(sqlContentSilver);

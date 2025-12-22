@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         })
 
         if (result.success) {
-            return NextResponse.json(result.output);
+            return NextResponse.json({ success: true, sqlContentGold: result.output }, { status: 200 });
         } else {
             return NextResponse.json({ success: false, error: result.error }, { status: 500 });
         }
@@ -108,10 +108,10 @@ function transformSQLContent(dimensionSQL: string, aggregateSQL: string): string
               day,
               hour
           FROM ice.silver.$TableNameLower
-          WHERE year = '\${year}' 
-            AND month = '\${month}' 
-            AND day = '\${day}'
-            AND hour = '\${hour}'
+          WHERE year = ''''\${year}'''' 
+            AND month = ''''\${month}'''' 
+            AND day = ''''\${day}''''
+            AND hour = ''''\${hour}''''
           GROUP BY 
               -- TODO: Define dimension columns (must match SELECT)
               -- dimension1,
