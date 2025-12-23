@@ -1,13 +1,13 @@
 # Hướng dẫn sử dụng
 
 ## B1. Cài đặt
-
 ### Yêu cầu tối thiểu
 - Node.js phiên bản 24.12 LTS trở lên
 
 ### Cài đặt dependencies
 ```bash
-npm i
+   cd next-js-forms #Optional nếu chưa vào root folder
+   npm i
 ```
 
 ### Chú ý về giao thức

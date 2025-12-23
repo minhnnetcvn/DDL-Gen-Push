@@ -1,15 +1,3 @@
-
-# ============================================================================
-# Script: Generate ETL JSON for NodeJS from Schema Registry
-# Description: Fetch Avro schema, build column→type map, and emit Silver/Gold DDL as JSON
-# Usage:
-#   .\generate-etl-json.ps1 -TableName "NEW_TABLE_NAME" [-SchemaRegistryUrl "http://localhost:8081"]
-#                           [-PrimaryKeyColumn "_id"] [-CreatedBy "admin"] [-SilverOnly] [-GoldOnly] [-Verbose]
-# Notes:
-#   - Outputs a single JSON object to STDOUT. Avoid -Verbose in production when piping to Node.js.
-#   - Removed all file writing and the OutputFile parameter.
-# ============================================================================
-
 param(
   [Parameter(Mandatory=$true)]
   [string]$TableName,
@@ -29,77 +17,6 @@ param(
   [Parameter(Mandatory=$false)]
   [switch]$GoldOnly
 )
-
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
-function Convert-AvroTypeToSparkType {
-  param([object]$TypeNode)
-
-  $avroType = ""
-
-  # Handle union types: ["null","string"] -> "string"
-  if ($TypeNode -is [System.Array]) {
-    foreach ($t in $TypeNode) {
-      if ($t -is [string] -and $t -ne "null") {
-        $avroType = $t
-        break
-      } elseif ($t -is [PSCustomObject] -and $t.type) {
-        $avroType = $t.type
-        if ($t.logicalType) {
-          $avroType = "$($t.type):$($t.logicalType)"
-        }
-        break
-      }
-    }
-  }
-  elseif ($TypeNode -is [string]) {
-    $avroType = $TypeNode
-  }
-  elseif ($TypeNode -is [PSCustomObject] -and $TypeNode.type) {
-    $avroType = $TypeNode.type
-    if ($TypeNode.logicalType) {
-      $avroType = "$($TypeNode.type):$($TypeNode.logicalType)"
-    }
-  }
-
-  switch ($avroType.ToLower()) {
-    "string" { return "STRING" }
-    "int"    { return "INT" }
-    "integer"{ return "INT" }
-    "long"   { return "BIGINT" }
-    "float"  { return "FLOAT" }
-    "double" { return "DOUBLE" }
-    "boolean"{ return "BOOLEAN" }
-    "bytes"  { return "BINARY" }
-    { $_ -match "^long:timestamp-millis$" } { return "TIMESTAMP" }
-    { $_ -match "^long:timestamp-micros$" } { return "TIMESTAMP" }
-    { $_ -match "^int:date$" }              { return "DATE" }
-    { $_ -match "^bytes:decimal$" }         { return "FLOAT" }
-    default {
-      Write-Verbose "Unknown Avro type: $avroType, defaulting to STRING"
-      return "STRING"
-    }
-  }
-}
-
-function Get-SchemaFromRegistry {
-  param([string]$Subject)
-
-  try {
-    $url = "$SchemaRegistryUrl/subjects/$Subject/versions/latest"
-    Write-Verbose "Fetching schema from: $url"
-    $response = Invoke-RestMethod -Uri $url -Method GET -ErrorAction Stop
-
-    # FIX: correctly parse nested 'schema' JSON string
-    $schemaJson = $response.schema | ConvertFrom-Json  # original script had a pipe omission
-    return $schemaJson
-  } catch {
-    Write-Error "Failed to fetch schema from Schema Registry: $_"
-    return $null
-  }
-}
 
 function Generate-SilverDDL {
   param([object]$Schema, [string]$TableNameLower)
@@ -140,11 +57,16 @@ function Generate-GoldDDL {
   # Template for fact table; customize as needed
   $ddl = @"
 CREATE TABLE IF NOT EXISTS ice.gold.fact_$TableNameLower (
-
+  -- TODO: Define dimension columns (GROUP BY keys)
+  -- Example:
+  -- dimension1 STRING,
+  -- dimension2 DOUBLE,
 {{DIMENSIONS}}
+  -- TODO: Define aggregated metrics
 
 {{AGGREGATES}}
 
+  -- Partition columns (REQUIRED)
   year  STRING,
   month STRING,
   day   STRING,

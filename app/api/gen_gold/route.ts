@@ -1,3 +1,4 @@
+import { transformSQLContent } from "@/app/helper/generateConfigs";
 import ColumnDef from "@/types/ColumnDef";
 import { spawn } from "child_process"
 import { NextResponse } from "next/server"
@@ -85,45 +86,6 @@ function buildGoldDDL(columns: ColumnDef[], table_template: string, dimensionDDL
   return table_template
     .replace('{{DIMENSIONS}}', dimensionDDL || '  -- none')
     .replace('{{AGGREGATES}}', aggregateDDL || '  -- none')
-}
-
-function transformSQLContent(dimensionSQL: string, aggregateSQL: string): string {
-  // Example transformation: Trim whitespace and convert to uppercase
-  let transformSqlTemplate = `
-      SELECT 
-              -- TODO: Define dimension columns (must match DDL)
-              -- dimension1,
-              -- dimension2,
-              ${dimensionSQL}
-
-              -- TODO: Define aggregated metrics (must match DDL)
-              -- SUM(amount) as total_amount,
-              -- COUNT(*) as total_count,
-              -- AVG(amount) as avg_amount,
-              ${aggregateSQL}
-              
-              -- Partition columns (REQUIRED in SELECT and GROUP BY)
-              year,
-              month,
-              day,
-              hour
-          FROM ice.silver.$TableNameLower
-          WHERE year = ''''\${year}'''' 
-            AND month = ''''\${month}'''' 
-            AND day = ''''\${day}''''
-            AND hour = ''''\${hour}''''
-          GROUP BY 
-              -- TODO: Define dimension columns (must match SELECT)
-              -- dimension1,
-              -- dimension2,
-              ${dimensionSQL},
-              -- Partition columns (REQUIRED in SELECT and GROUP BY)
-              year,
-              month,
-              day,
-              hour
-      `;
-  return transformSqlTemplate.trim().toUpperCase();
 }
 
 
