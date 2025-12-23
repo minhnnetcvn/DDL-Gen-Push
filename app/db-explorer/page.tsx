@@ -11,20 +11,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { ETLConfigTable, type ETLConfig } from "@/components/etl-config-table"
-import { Database, Search, Loader2, Plus, Trash2 } from "lucide-react"
+import { Database, Search, Loader2, Plus, Trash2, Key } from "lucide-react"
+import { ColumnType } from "@/types/ColumnType"
+import { v4 as uuidv4 } from "uuid"
 
 export default function DBExplorerPage() {
   const { toast } = useToast()
   const [dbConfigured, setDbConfigured] = useState(false)
   const [isQuerying, setIsQuerying] = useState(false)
-  const [results, setResults] = useState<ETLConfig[]>([])
+  const [queryResults, setResults] = useState<ETLConfig[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
-  const [inputRows, setInputRows] = useState<InputRow[]>([
-    { id: "1", type: "text", label: "Single Line Input", value: "" },
-    { id: "2", type: "select", label: "Select Option", value: "", options: ["Option 1", "Option 2", "Option 3"] },
-    { id: "3", type: "textarea", label: "Multi-line Input", value: "" },
-  ])
+  const [columnsConfig, setcolumnsConfig] = useState<ColumnType[]>([])
   
   
   const [dbData, setDbData] = useState({
@@ -95,30 +93,38 @@ const handleIdClick = (rowId: number) => {
     console.log("Row clicked with ID:", rowId);
     setSelectedRowId(rowId)
     setIsDialogOpen(true)
-    // Todo: Open a dialogue here.
+    setcolumnsConfig(prev => Object.entries(queryResults.filter((row) => row.id === rowId)[0])
+      .map(([key, value]) => {
+        return {
+          id: uuidv4(),
+          key: key,
+          value: String(value),
+          dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",
+          options: key === "layer" ? ["gold", "silver"] : key === "enabled" ? ["true", "false"] : undefined,
+        }
+      }))
+    console.log("Loaded columns config:", columnsConfig);
   }
 
   const addInputRow = (type: "text" | "select" | "textarea") => {
-    const newRow: InputRow = {
-      id: Date.now().toString(),
-      type,
-      label: type === "text" ? "New Text Input" : type === "select" ? "New Select" : "New Textarea",
+    const newRow: ColumnType = {
+      key: "",
       value: "",
-      options: type === "select" ? ["Option 1", "Option 2", "Option 3"] : undefined,
+      dataType: type,
     }
-    setInputRows([...inputRows, newRow])
+    setcolumnsConfig([...columnsConfig, newRow])
   }
 
   const removeInputRow = (id: string) => {
-    setInputRows(inputRows.filter((row) => row.id !== id))
+    setcolumnsConfig(columnsConfig.filter((column) => column.key !== id))
   }
 
   const updateInputRowValue = (id: string, value: string) => {
-    setInputRows(inputRows.map((row) => (row.id === id ? { ...row, value } : row)))
+    setcolumnsConfig(columnsConfig.map((column) => (column.key === id ? { ...column, value } : column)))
   }
 
-  const updateInputRowLabel = (id: string, label: string) => {
-    setInputRows(inputRows.map((row) => (row.id === id ? { ...row, label } : row)))
+  const updateInputRowKeyName = (key: string, newKeyName: string) => {
+    setcolumnsConfig(columnsConfig.map((column) => (column.key === key ? { ...column, key: newKeyName } : column)))
   }
 
   const handleQuerySubmit = async (e: React.FormEvent) => {
@@ -339,7 +345,7 @@ const handleIdClick = (rowId: number) => {
               </CardContent>
             </Card>
           </div>
-          {results.length > 0 && (
+          {queryResults.length > 0 && (
               <Card className="animate-in fade-in slide-in-from-top-4 duration-500 col-span-12">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
@@ -348,7 +354,7 @@ const handleIdClick = (rowId: number) => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ETLConfigTable data={results} onIdClick={handleIdClick} onRowClick={handleRowClick} />
+                  <ETLConfigTable data={queryResults} onIdClick={handleIdClick} onRowClick={handleRowClick} />
                 </CardContent>
               </Card>
             )}
@@ -356,7 +362,7 @@ const handleIdClick = (rowId: number) => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="w-[90vw] h-[90vh] overflow-hidden flex flex-col max-w-none max-h-none">
           <DialogHeader>
             <DialogTitle>Edit Row Configuration {selectedRowId !== null && `(ID: ${selectedRowId})`}</DialogTitle>
             <DialogDescription>
@@ -365,39 +371,38 @@ const handleIdClick = (rowId: number) => {
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-4">
-            {inputRows.map((row) => (
-              <Card key={row.id} className="p-4">
+            {columnsConfig.map((column) => (
+              <Card key={column.id} className="p-4">
                 <div className="flex items-start gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor={`label-${row.id}`} className="min-w-[80px]">
-                        Label:
+                      <Label htmlFor={`column-name-${column.id}`} className="min-w-[80px]">
+                        Column Name:
                       </Label>
                       <Input
-                        id={`label-${row.id}`}
-                        value={row.label}
-                        onChange={(e) => updateInputRowLabel(row.id, e.target.value)}
+                        id={`column-name-${column.id}`}
+                        value={column.key}
+                        onChange={(e) => updateInputRowKeyName(column.key, e.target.value)}
                         className="flex-1"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`input-${row.id}`}>{row.label}</Label>
-                      {row.type === "text" && (
+                      {column.dataType === "text" && (
                         <Input
-                          id={`input-${row.id}`}
-                          value={row.value}
-                          onChange={(e) => updateInputRowValue(row.id, e.target.value)}
+                          id={`column-value-${column.id}`}
+                          value={column.value}
+                          onChange={(e) => updateInputRowValue(column.key, e.target.value)}
                           placeholder="Enter text..."
                         />
                       )}
-                      {row.type === "select" && (
-                        <Select value={row.value} onValueChange={(v) => updateInputRowValue(row.id, v)}>
-                          <SelectTrigger id={`input-${row.id}`}>
+                      {column.dataType === "select" && (
+                        <Select value={column.value} onValueChange={(v) => updateInputRowValue(column.key, v)}>
+                          <SelectTrigger id={`input-${column.id}`}>
                             <SelectValue placeholder="Select an option" />
                           </SelectTrigger>
                           <SelectContent>
-                            {row.options?.map((option) => (
+                            {column.options?.map((option) => (
                               <SelectItem key={option} value={option}>
                                 {option}
                               </SelectItem>
@@ -405,11 +410,11 @@ const handleIdClick = (rowId: number) => {
                           </SelectContent>
                         </Select>
                       )}
-                      {row.type === "textarea" && (
+                      {column.dataType === "textarea" && (
                         <Textarea
-                          id={`input-${row.id}`}
-                          value={row.value}
-                          onChange={(e) => updateInputRowValue(row.id, e.target.value)}
+                          id={`input-${column.id}`}
+                          value={column.value}
+                          onChange={(e) => updateInputRowValue(column.key, e.target.value)}
                           placeholder="Enter multi-line text..."
                           rows={4}
                         />
@@ -420,7 +425,7 @@ const handleIdClick = (rowId: number) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeInputRow(row.id)}
+                    onClick={() => removeInputRow(column.key)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -452,7 +457,7 @@ const handleIdClick = (rowId: number) => {
               </Button>
               <Button
                 onClick={() => {
-                  console.log("Submitted values:", inputRows)
+                  console.log("Submitted values:", columnsConfig)
                   toast({
                     title: "Configuration Saved",
                     description: "Your row configuration has been saved successfully.",
