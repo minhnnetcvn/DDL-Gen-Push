@@ -7,10 +7,11 @@ import type { ETLConfig } from "@/types/ETLConfig";
 
 interface ETLConfigTableProps {
   data: ETLConfig[]
+  onIdClick?: (id: number) => void
   onRowClick?: (id: number) => void
 }
 
-export function ETLConfigTable({ data, onRowClick }: ETLConfigTableProps) {
+export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowClick }: ETLConfigTableProps) {
   return (
     <div className="rounded-md border">
       <ScrollArea className="w-full whitespace-nowrap rounded-md">
@@ -74,8 +75,8 @@ export function ETLConfigTable({ data, onRowClick }: ETLConfigTableProps) {
               </TableRow>
             ) : (
               data.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium cursor-pointer hover:line-through" onClick={() => onRowClick?.(row.id)}>#{row.id}</TableCell>
+                <TableRow className="cursor-pointer" key={row.id} onClick={() => onRowClick?.(row.id)}>
+                  <TableCell className="font-medium cursor-pointer hover:line-through" onClick={() => onIdClick?.(row.id)}>#{row.id}</TableCell>
                   <TableCell>
                     <Badge variant={row.layer.toLowerCase() === "gold" ? "default" : "secondary"}>{row.layer}</Badge>
                   </TableCell>

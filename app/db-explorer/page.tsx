@@ -7,15 +7,26 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { ETLConfigTable, type ETLConfig } from "@/components/etl-config-table"
-import { Database, Search, Loader2 } from "lucide-react"
+import { Database, Search, Loader2, Plus, Trash2 } from "lucide-react"
 
 export default function DBExplorerPage() {
   const { toast } = useToast()
   const [dbConfigured, setDbConfigured] = useState(false)
   const [isQuerying, setIsQuerying] = useState(false)
   const [results, setResults] = useState<ETLConfig[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
+  const [inputRows, setInputRows] = useState<InputRow[]>([
+    { id: "1", type: "text", label: "Single Line Input", value: "" },
+    { id: "2", type: "select", label: "Select Option", value: "", options: ["Option 1", "Option 2", "Option 3"] },
+    { id: "3", type: "textarea", label: "Multi-line Input", value: "" },
+  ])
+  
+  
   const [dbData, setDbData] = useState({
     host: "10.8.75.82",
     port: "5432",
@@ -41,43 +52,74 @@ export default function DBExplorerPage() {
     setDbConfigured(true)
   }
 
-  const handleRowClick = (rowId: number) => {
+const handleIdClick = (rowId: number) => {
   const confirmDelete = confirm(`Do you want to delete row ID #${rowId}?`);
   if (confirmDelete) {
-      fetch(`/api/etl_config_table/${rowId}`, {
-          method: 'DELETE',
+    fetch(`/api/etl_config_table/${rowId}`, {
+        method: 'DELETE',
 
-          body: JSON.stringify({
-            poolCredentials: {
-              host: dbData.host,
-              port: dbData.port,
-              user: dbData.username,
-              password: dbData.password,
-              db: dbData.database,
-              tableName: dbData.tableName,
-            },
-          }),
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              alert(`ETL Config ID #${rowId} deleted successfully.`);
-              // Optionally, you can add logic to refresh the table or remove the row from the UI
-              setResults(prev => prev.filter(item => item.id !== rowId));
-          } else {
-              alert(`Failed to delete ETL Config ID #${rowId}: ${data.error}`);
-          }
-      })
-      .catch(error => {
-          console.error('Error deleting ETL Config:', error);
-          alert(`An error occurred while deleting ETL Config ID #${rowId}.`);
-      })
-      .finally(() => {
-          // Any cleanup actions if necessary
-          console.log('Delete request ran.');
-      });
+        body: JSON.stringify({
+          poolCredentials: {
+            host: dbData.host,
+            port: dbData.port,
+            user: dbData.username,
+            password: dbData.password,
+            db: dbData.database,
+            tableName: dbData.tableName,
+          },
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`ETL Config ID #${rowId} deleted successfully.`);
+            // Optionally, you can add logic to refresh the table or remove the row from the UI
+            setResults(prev => prev.filter(item => item.id !== rowId));
+        } else {
+            alert(`Failed to delete ETL Config ID #${rowId}: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting ETL Config:', error);
+        alert(`An error occurred while deleting ETL Config ID #${rowId}.`);
+    })
+    .finally(() => {
+        // Any cleanup actions if necessary
+        console.log('Delete request ran.');
+    });
   }
 }
+
+
+  const handleRowClick = (rowId: number) => {
+    console.log("Row clicked with ID:", rowId);
+    setSelectedRowId(rowId)
+    setIsDialogOpen(true)
+    // Todo: Open a dialogue here.
+  }
+
+  const addInputRow = (type: "text" | "select" | "textarea") => {
+    const newRow: InputRow = {
+      id: Date.now().toString(),
+      type,
+      label: type === "text" ? "New Text Input" : type === "select" ? "New Select" : "New Textarea",
+      value: "",
+      options: type === "select" ? ["Option 1", "Option 2", "Option 3"] : undefined,
+    }
+    setInputRows([...inputRows, newRow])
+  }
+
+  const removeInputRow = (id: string) => {
+    setInputRows(inputRows.filter((row) => row.id !== id))
+  }
+
+  const updateInputRowValue = (id: string, value: string) => {
+    setInputRows(inputRows.map((row) => (row.id === id ? { ...row, value } : row)))
+  }
+
+  const updateInputRowLabel = (id: string, label: string) => {
+    setInputRows(inputRows.map((row) => (row.id === id ? { ...row, label } : row)))
+  }
 
   const handleQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -120,7 +162,18 @@ export default function DBExplorerPage() {
       };
 
       // Mock data matching the schema from varchar.ts
-
+      setResults([
+        {
+          id: 1,
+          layer: "gold",
+          source_table_name: "customer_data",
+          source_table_full_name: "/data/source/customer_data.csv",
+          target_table_full_name: "customer_data_gold",
+          target_table_name: "customer_data_gold",
+          target_table_ddl: "CREATE TABLE customer_data_gold (...)",
+          enabled: true,
+        }
+      ])
       toast({
         title: "Query Complete",
         description: `Found records matching your criteria.`,
@@ -295,12 +348,124 @@ export default function DBExplorerPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ETLConfigTable data={results} onRowClick={handleRowClick} />
+                  <ETLConfigTable data={results} onIdClick={handleIdClick} onRowClick={handleRowClick} />
                 </CardContent>
               </Card>
             )}
         </div>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Edit Row Configuration {selectedRowId !== null && `(ID: ${selectedRowId})`}</DialogTitle>
+            <DialogDescription>
+              Customize your input fields below. Click the add buttons to create new rows.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-4 pr-4">
+            {inputRows.map((row) => (
+              <Card key={row.id} className="p-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`label-${row.id}`} className="min-w-[80px]">
+                        Label:
+                      </Label>
+                      <Input
+                        id={`label-${row.id}`}
+                        value={row.label}
+                        onChange={(e) => updateInputRowLabel(row.id, e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`input-${row.id}`}>{row.label}</Label>
+                      {row.type === "text" && (
+                        <Input
+                          id={`input-${row.id}`}
+                          value={row.value}
+                          onChange={(e) => updateInputRowValue(row.id, e.target.value)}
+                          placeholder="Enter text..."
+                        />
+                      )}
+                      {row.type === "select" && (
+                        <Select value={row.value} onValueChange={(v) => updateInputRowValue(row.id, v)}>
+                          <SelectTrigger id={`input-${row.id}`}>
+                            <SelectValue placeholder="Select an option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {row.options?.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {row.type === "textarea" && (
+                        <Textarea
+                          id={`input-${row.id}`}
+                          value={row.value}
+                          onChange={(e) => updateInputRowValue(row.id, e.target.value)}
+                          placeholder="Enter multi-line text..."
+                          rows={4}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeInputRow(row.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="border-t pt-4 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => addInputRow("text")}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Text Input
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => addInputRow("select")}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Select
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => addInputRow("textarea")}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Textarea
+              </Button>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("Submitted values:", inputRows)
+                  toast({
+                    title: "Configuration Saved",
+                    description: "Your row configuration has been saved successfully.",
+                  })
+                  setIsDialogOpen(false)
+                }}
+              >
+                Save Configuration
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
