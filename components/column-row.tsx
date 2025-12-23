@@ -36,9 +36,12 @@ export function ColumnRow({ row, onUpdate, onRemove, canRemove }: ColumnRowProps
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="TIMESTAMP">Timestamp</SelectItem>
-            <SelectItem value="DECIMAL(18,2)">Decimal(18,2)</SelectItem>
+            <SelectItem value="BIGINT">BigINT</SelectItem>
+            <SelectItem value="BINARY">Binary</SelectItem>
+            <SelectItem value="FLOAT">Float</SelectItem>
             <SelectItem value="STRING">String</SelectItem>
             <SelectItem value="DOUBLE">Double</SelectItem>
+            <SelectItem value="BOOLEAN">Boolean</SelectItem>
           </SelectContent>
         </Select>
       </td>

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,7 @@ import { ColumnRow, type ColumnRowData } from "@/components/column-row"
 import { SchemaMap } from "@/types/SchemaMap"
 import validateField from "./helper/validateField"
 import { v4 as uuidv4 } from 'uuid';
+import { useUsername } from "@/context/username-context"
 
 export default function HomePage() {
   const { toast } = useToast()
@@ -23,6 +24,9 @@ export default function HomePage() {
 
   const [showColumnForm, setShowColumnForm] = useState(false)
   const [showPostgresForm, setShowPostgresForm] = useState(false)
+
+  const username = useUsername();
+
   const [schemaData, setSchemaData] = useState({
     schemaRegistryUrl: "",
     tableName: "",
@@ -42,11 +46,18 @@ export default function HomePage() {
     schemaRegistryUrl: "10.8.75.82:8081",
     tableName: "",
     option: "",
+    createdBy: ""
   })
+
+  useEffect(() => {
+    setFormData((prev) => ({...prev, createdBy: username}));
+  }, [username]);
+
   const [errors, setErrors] = useState({
     schemaRegistryUrl: "",
     tableName: "",
   })
+
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [rows, setRows] = useState<ColumnRowData[]>([])
@@ -104,7 +115,6 @@ export default function HomePage() {
       })
       .then(res => res.json())
       .then(data => {
-        // console.log("Received data:", data);
 
         data = typeof data === "string" ? JSON.parse(data) : data // Handle stringified JSON;
 
@@ -321,7 +331,7 @@ export default function HomePage() {
                       Both
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  {/* <div className="flex items-center space-x-2">
                     <RadioGroupItem value="goldonly" id="goldonly" disabled={true} />
                     <Label htmlFor="goldonly" className="font-normal cursor-pointer">
                       Gold only
@@ -332,7 +342,7 @@ export default function HomePage() {
                     <Label htmlFor="silveronly" className="font-normal cursor-pointer">
                       Silver only
                     </Label>
-                  </div>
+                  </div> */}
                 </RadioGroup>
               </div>
 

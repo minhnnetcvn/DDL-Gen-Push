@@ -14,6 +14,7 @@ import { ETLConfigTable, type ETLConfig } from "@/components/etl-config-table"
 import { Database, Search, Loader2, Plus, Trash2, Key } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
 import { v4 as uuidv4 } from "uuid"
+import { useUsername } from "@/context/username-context"
 
 export default function DBExplorerPage() {
   const { toast } = useToast()
@@ -24,7 +25,8 @@ export default function DBExplorerPage() {
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
   const [columnsConfig, setcolumnsConfig] = useState<ColumnType[]>([])
   
-  
+  const username = useUsername();
+
   const [dbData, setDbData] = useState({
     host: "10.8.75.82",
     port: "5432",
@@ -93,7 +95,7 @@ const handleIdClick = (rowId: number) => {
     console.log("Row clicked with ID:", rowId);
     setSelectedRowId(rowId)
     setIsDialogOpen(true)
-    setcolumnsConfig(prev => Object.entries(queryResults.filter((row) => row.id === rowId)[0])
+    setcolumnsConfig(prev => prev = Object.entries(queryResults.filter((row) => row.id === rowId)[0])
       .map(([key, value]) => {
         return {
           id: uuidv4(),
@@ -102,12 +104,14 @@ const handleIdClick = (rowId: number) => {
           dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",
           options: key === "layer" ? ["gold", "silver"] : key === "enabled" ? ["true", "false"] : undefined,
         }
-      }))
+      })
+    );
     console.log("Loaded columns config:", columnsConfig);
   }
 
   const addInputRow = (type: "text" | "select" | "textarea") => {
     const newRow: ColumnType = {
+      id: uuidv4(),
       key: "",
       value: "",
       dataType: type,
@@ -116,15 +120,15 @@ const handleIdClick = (rowId: number) => {
   }
 
   const removeInputRow = (id: string) => {
-    setcolumnsConfig(columnsConfig.filter((column) => column.key !== id))
+    setcolumnsConfig(columnsConfig.filter((column) => column.id !== id))
   }
 
   const updateInputRowValue = (id: string, value: string) => {
-    setcolumnsConfig(columnsConfig.map((column) => (column.key === id ? { ...column, value } : column)))
+    setcolumnsConfig(columnsConfig.map((column) => (column.id === id ? { ...column, value } : column)))
   }
 
-  const updateInputRowKeyName = (key: string, newKeyName: string) => {
-    setcolumnsConfig(columnsConfig.map((column) => (column.key === key ? { ...column, key: newKeyName } : column)))
+  const updateInputRowKeyName = (id: string, newKeyName: string) => {
+    setcolumnsConfig(columnsConfig.map((column) => (column.id === id ? { ...column, key: newKeyName } : column)))
   }
 
   const handleQuerySubmit = async (e: React.FormEvent) => {
@@ -132,8 +136,7 @@ const handleIdClick = (rowId: number) => {
     setIsQuerying(true)
 
     try {
-      // TODO: Implement actual DB query logic using your PostgreSQL configuration
-      // This would typically involve a server action or API call to fetch data based on filters
+      // DB query logic using your PostgreSQL configuration -> Call API -> DB
       try {
         fetch("/api/etl_config_table", {
           method: "POST",
@@ -193,6 +196,61 @@ const handleIdClick = (rowId: number) => {
     } finally {
       setIsQuerying(false)
     }
+  }
+
+  function handleDialogSave(selectedRowId: number | null, columnsConfig: ColumnType[]) {
+    console.log("Saving configuration for row ID:", selectedRowId);
+    if (selectedRowId === null) {
+      alert("No row selected for update.");
+      return;
+    }
+
+    fetch(`/api/etl_config_table/${selectedRowId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          poolCredentials: {
+            host: dbData.host,
+            port: dbData.port,
+            user: dbData.username,
+            password: dbData.password,
+            db: dbData.database,
+            tableName: dbData.tableName,
+          },
+          updatedConfig: columnsConfig.reduce((acc, column) => {
+            acc[column.key] = column.value;
+            return acc;
+          }, {} as Record<string, any>),
+       })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`ETL Config ID #${selectedRowId} updated successfully.`);
+            // Optionally, you can add logic to refresh the table or update the row in the UI
+            setResults(prev => prev.map(item => item.id === selectedRowId ? { ...item, ...columnsConfig.reduce((acc, column) => {
+              acc[column.key] = column.value;
+              return acc;
+            }, {} as Record<string, any>) } : item));
+        } else {
+            alert(`Failed to update ETL Config ID #${selectedRowId}: ${data.error}`);
+        } 
+    })
+    .catch(error => {
+        console.error('Error updating ETL Config:', error);
+        alert(`An error occurred while updating ETL Config ID #${selectedRowId}.`);
+    }
+    )
+    .finally(() => {
+        // Any cleanup actions if necessary
+        console.log('Update request ran.');
+    });
+    console.log("Submitted values:", columnsConfig)
+                  toast({
+                    title: "Configuration Submitting",
+                    description: "Your row configuration has been submit successfully.",
+                  })
+                  
+                  setIsDialogOpen(false)
   }
 
   return (
@@ -382,7 +440,7 @@ const handleIdClick = (rowId: number) => {
                       <Input
                         id={`column-name-${column.id}`}
                         value={column.key}
-                        onChange={(e) => updateInputRowKeyName(column.key, e.target.value)}
+                        onChange={(e) => updateInputRowKeyName(column.id, e.target.value)}
                         className="flex-1"
                       />
                     </div>
@@ -392,12 +450,12 @@ const handleIdClick = (rowId: number) => {
                         <Input
                           id={`column-value-${column.id}`}
                           value={column.value}
-                          onChange={(e) => updateInputRowValue(column.key, e.target.value)}
+                          onChange={(e) => updateInputRowValue(column.id, e.target.value)}
                           placeholder="Enter text..."
                         />
                       )}
                       {column.dataType === "select" && (
-                        <Select value={column.value} onValueChange={(v) => updateInputRowValue(column.key, v)}>
+                        <Select value={column.value} onValueChange={(v) => updateInputRowValue(column.id, v)}>
                           <SelectTrigger id={`input-${column.id}`}>
                             <SelectValue placeholder="Select an option" />
                           </SelectTrigger>
@@ -425,7 +483,7 @@ const handleIdClick = (rowId: number) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeInputRow(column.key)}
+                    onClick={() => removeInputRow(column.id)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -457,11 +515,7 @@ const handleIdClick = (rowId: number) => {
               </Button>
               <Button
                 onClick={() => {
-                  console.log("Submitted values:", columnsConfig)
-                  toast({
-                    title: "Configuration Saved",
-                    description: "Your row configuration has been saved successfully.",
-                  })
+                  handleDialogSave(selectedRowId, columnsConfig)
                   setIsDialogOpen(false)
                 }}
               >

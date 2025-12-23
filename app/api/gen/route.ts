@@ -16,6 +16,8 @@ export async function POST(request: Request) {
         data.schemaRegistryUrl,
         "-TableName",
         data.tableName,
+        "-CreatedBy",
+        data.createdBy,
       ])
 
       let stdout = ""

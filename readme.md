@@ -58,4 +58,19 @@ npm i
 ### 3. Xóa cấu hình
 1. Click vào **ID** của cấu hình cần xóa
 2. Hệ thống hiển thị box xác nhận
-3. Xác nhận xóa cấu hình
+
+## B4. Update Cấu hình bảng
+
+### 1. Truy cập trang Update
+1. Chọn **Explorer**
+2. Chọn phần **cấu hình**
+3. Tìm cấu hình bảng cần cập nhật
+
+### 2. Chỉnh sửa thông tin
+- Cập nhật các dữ liệu trong bảng
+
+### 3. Lưu thay đổi
+1. Ấn **Save Configuration** để lưu cấu hình
+2. Hệ thống đẩy cấu hình cập nhật lên DB
+3. Xác nhận hoàn tất cập nhật
+

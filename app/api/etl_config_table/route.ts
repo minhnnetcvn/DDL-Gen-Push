@@ -6,21 +6,23 @@ export async function POST(request: Request) {
     try {
         const {poolCredentials: postgresData, queryFilters: queryData} = await request.json();
 
-        await pool(postgresData.host, postgresData.port, postgresData.user, postgresData.password, postgresData.db).query(
-            `SELECT * FROM ${postgresData.tableName}
+        const query = `SELECT * FROM ${postgresData.tableName}
             ${queryData.tableName !== "" || queryData.layer !== "all" ? "WHERE" : ""}
             ${queryData.tableName !== "" ? `source_table_name ILIKE \'%${queryData.tableName}%\'
             OR target_table_name ILIKE \'%${queryData.tableName}%\'
             OR source_table_full_name ILIKE \'%${queryData.tableName}%\'
             OR target_table_full_name ILIKE \'%${queryData.tableName}%\';` : ""}
-            ${queryData.tableName !== "" ? ' AND ' : ''}
+            ${queryData.tableName !== "" && queryData.layer !== "all" ? ' AND ' : ''}
             ${queryData.layer === "all" ? "" : `layer = \'${queryData.layer}\'`}
-            `
+        `;
+        // console.log("ETL Config Query:", query);
+
+        await pool(postgresData.host, postgresData.port, postgresData.user, postgresData.password, postgresData.db).query(
+            query
         )
         .then((res) => {
-            // console.log("ETL Config Query Results:", res.rows);
-            // return Response.json({ success: true, data: res.rows });
             result = res.rows;
+            return Response.json({ success: true, data: result });// Close the database pool if necessary
         });
         // Here you can add logic to process the ETL config data as needed
         

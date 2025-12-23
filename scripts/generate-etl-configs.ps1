@@ -76,7 +76,7 @@ function Convert-AvroTypeToSparkType {
     { $_ -match "^long:timestamp-millis$" } { return "TIMESTAMP" }
     { $_ -match "^long:timestamp-micros$" } { return "TIMESTAMP" }
     { $_ -match "^int:date$" }              { return "DATE" }
-    { $_ -match "^bytes:decimal$" }         { return "DECIMAL(18,2)" }
+    { $_ -match "^bytes:decimal$" }         { return "FLOAT" }
     default {
       Write-Verbose "Unknown Avro type: $avroType, defaulting to STRING"
       return "STRING"
