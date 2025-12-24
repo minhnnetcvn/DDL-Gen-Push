@@ -50,8 +50,8 @@ export function goldDDL(params: DDLParams): SQLQuery {
         USING iceberg
         PARTITIONED BY (year, month, day, hour)
         TBLPROPERTIES (
-        ''''write.parquet.compression-codec''''=''''snappy'''',
-        ''''write.target-file-size-bytes''''=''''268435456''''
+        ''write.parquet.compression-codec''=''snappy'',
+        ''write.target-file-size-bytes''=''268435456''
         )
     `;
     return DDL;
@@ -74,10 +74,10 @@ export function transformSQLContent(params: TransformParams): SQLQuery {
             day,
             hour
           FROM ice.silver.$TableNameLower
-          WHERE year = ''''\${year}'''' 
-            AND month = ''''\${month}'''' 
-            AND day = ''''\${day}''''
-            AND hour = ''''\${hour}''''
+          WHERE year = ''\${year}'' 
+            AND month = ''\${month}'' 
+            AND day = ''\${day}''
+            AND hour = ''\${hour}''
           GROUP BY 
               ${params.dimensionColumns},
               -- Partition columns (REQUIRED in SELECT and GROUP BY)
@@ -137,7 +137,7 @@ export function goldConfig(params: ConfigParams): SQLQuery {
 }
 
 export function silverDDL(params: DDLParams): SQLQuery {
-    const DDL = `CREATE TABLE IF NOT EXISTS ice.silver.${params.tableName} (
+    const DDL = `CREATE TABLE IF NOT EXISTS silver.${params.tableName} (
             
             ${params.allColumnsDefinitions},
 
@@ -150,8 +150,8 @@ export function silverDDL(params: DDLParams): SQLQuery {
         USING iceberg
         PARTITIONED BY (year, month, day, hour)
         TBLPROPERTIES (
-        ''''write.parquet.compression-codec''''=''''snappy'''',
-        ''''write.target-file-size-bytes''''=''''134217728''''
+        ''write.parquet.compression-codec''=''snappy'',
+        ''write.target-file-size-bytes''=''134217728''
         )
     `;
     return DDL.trim();
@@ -192,9 +192,9 @@ export function silverConfig(params: ConfigParams): SQLQuery {
             created_by
         ) VALUES (
             'silver',
+            '${params.tableNameUpper}',
             '${params.tableNameLower}',
-            '${params.tableNameLower}',
-            'ice.bronze.altibase_raw',
+            'bronze.altibase_raw',
             'ice.silver.${params.tableNameLower}',
             '${params.ddl}',
             'year,month,day,hour',
