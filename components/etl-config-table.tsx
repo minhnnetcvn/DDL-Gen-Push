@@ -3,10 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
-import type { ETLConfig } from "@/types/ETLConfig";
+import type { ETLConfigRow } from "@/types/ETLConfigRow";
 
 interface ETLConfigTableProps {
-  data: ETLConfig[]
+  data: ETLConfigRow[]
   onIdClick?: (id: number) => void
   onRowClick?: (id: number) => void
 }
@@ -175,5 +175,5 @@ export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowCl
     </div>
   )
 }
-export { ETLConfig };
+export { ETLConfigRow as ETLConfig };
 

@@ -1,8 +1,8 @@
 import { pool } from "@/lib/db";
-import { ETLConfig } from "@/types/ETLConfig";
+import { ETLConfigRow } from "@/types/ETLConfigRow";
 
 export async function POST(request: Request) {
-    let result : ETLConfig[] = [];
+    let result : ETLConfigRow[] = [];
     try {
         const {poolCredentials: postgresData, queryFilters: queryData} = await request.json();
 

@@ -1,27 +1,21 @@
-export interface SilverConfigParams {
+export interface ConfigParams {
   tableNameUpper: string;
   tableNameLower: string;
   ddl: string;
-  pkColumn: string;
-  schemaRegistryUrl: string;
+  pkColumns: string;
+  transformSQL?: string;
   createdBy: string;
 }
 
-export interface GoldConfigParams {
-  tableNameUpper: string;
-  tableNameLower: string;
-  goldDDL: string;
-  transformSQL: string;
-  createdBy: string;
+export interface DDLParams {
+    dimensionDefinitions? : string;
+    aggregateDefinitions? : string;
+    allColumnsDefinitions? : string;
+    tableName: string;
 }
 
-export interface GoldDDLParams {
+export interface TransformParams {
     dimensionColumns: string;
     aggregateColumns: string;
-}
-
-export interface SilverDDLParams {
-    tableNameLower: any;
-    tableNameUpper: string;
-    ddlJoined: string;
+    allColumns?: string;
 }

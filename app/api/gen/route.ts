@@ -1,58 +1,65 @@
-import { spawn } from "child_process"
+import { goldDDL, generateColumnSQL, transformSQLContent, silverDDL, goldConfig, silverConfig } from "@/app/helper/generateConfigs";
+import { ColumnsClassificationType } from "@/types/ColumnsClassificationType";
+import { GenRequest } from "@/types/GenRequest";
+import { GenResponse } from "@/types/GenResponse";
+import { ConfigParams, DDLParams } from "@/types/Params";
+import { SQLQuery } from "@/types/PrimitiveTypes";
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
-  try {
-    const data = await request.json()
+    try {
+        const Data : GenRequest = await request.json();
 
-    const result = await new Promise<{ success: boolean; output?: string; error?: string }>((resolve, reject) => {
-      // Spawn PowerShell process
-      const ps = spawn("powershell.exe", [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "..\\next-js-forms\\scripts\\generate-etl-configs.ps1",
-        "-SchemaRegistryUrl",
-        data.schemaRegistryUrl,
-        "-TableName",
-        data.tableName,
-        "-CreatedBy",
-        data.createdBy,
-      ])
+        // DDL column type
+        // SQL Column only or aggregate as alias
+        // const columns = Data.columns.map((aColumn) => ({
+        //     name: aColumn.columnName,
+        //     type: aColumn.type,
+        //     aggregate: aColumn.aggregateMethod === "NONE" ? "" : aColumn.aggregateMethod,
+        // }))
 
-      let stdout = ""
-      let stderr = ""
+        const columnClass : ColumnsClassificationType = generateColumnSQL(Data.columns);
 
-      ps.stdout.on("data", (data) => {
-        stdout += data.toString()
-      })
-
-      ps.stderr.on("data", (data) => {
-        stderr += data.toString()
-        console.error("PowerShell stderr:", stderr)
-      })
-
-      ps.on("close", (code) => {
-        console.log("PowerShell process exited with code:", code)
-        if (code === 0) {
-          resolve({ success: true, output: stdout })
-        } else {
-          resolve({ success: false, error: stderr || "PowerShell script failed" })
+        const ddlParams: DDLParams = {
+            tableName: Data.tableName,
+            allColumnsDefinitions: columnClass.dimensionDefinitions + ",\n          	" + columnClass.aggregatesDefinitions,
+            aggregateDefinitions : columnClass.aggregatesDefinitions,
+            dimensionDefinitions : columnClass.dimensionDefinitions,
         }
-      })
 
-      ps.on("error", (error) => {
-        console.error("Failed to start PowerShell process:", error)
-        resolve({ success: false, error: error.message })
-      })
-    })
+        const silverDdlQuery: SQLQuery = silverDDL(ddlParams);
+        const goldDdlQuery: SQLQuery = goldDDL(ddlParams);
 
-    if (result.success) {
-      return NextResponse.json(JSON.parse(result.output || "{}"))
-    } else {
-      return NextResponse.json({ success: false, error: result.error }, { status: 500 })
+        const configParams : Omit<ConfigParams, "ddl"> = {
+            createdBy: Data.author,
+            pkColumns: columnClass.dimensionColumns,
+            tableNameLower: Data.tableName.toLowerCase(),
+            tableNameUpper: Data.tableName.toUpperCase(),
+        }
+        
+        const goldConfigQuery : SQLQuery = goldConfig({
+            ...configParams,
+            ddl: goldDdlQuery,
+            transformSQL: transformSQLContent({aggregateColumns: columnClass.aggregateColumns, dimensionColumns: columnClass.dimensionColumns})
+
+        })
+        
+        const silverConfigQuery : SQLQuery = silverConfig({
+            ...configParams,
+            ddl: silverDdlQuery,
+        })
+
+        const response : GenResponse = {
+            status: true,
+            silverConfigQuery: silverConfigQuery,
+            goldConfigQuery: goldConfigQuery,
+        }
+
+        return NextResponse.json(response, { status: 200})
+        
+    } catch (error: any) {
+        console.log(error);
+        console.error(error.message? error.message : error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-  }
 }

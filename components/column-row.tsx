@@ -2,14 +2,9 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ColumnRowData } from "@/types/ColumnRowData"
 import { Trash2 } from "lucide-react"
 
-export interface ColumnRowData {
-  id: string
-  columnName: string
-  type: string
-  aggregateMethod: string
-}
 
 interface ColumnRowProps {
   row: ColumnRowData

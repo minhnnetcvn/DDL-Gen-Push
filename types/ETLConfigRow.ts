@@ -1,4 +1,4 @@
-export interface ETLConfig {
+export interface ETLConfigRow {
  // ===== REQUIRED =====
   id: number;
 

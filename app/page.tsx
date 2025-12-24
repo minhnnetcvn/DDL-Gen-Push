@@ -9,11 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { ColumnRow, type ColumnRowData } from "@/components/column-row"
-import { SchemaMap } from "@/types/SchemaMap"
+import { ColumnRow } from "@/components/column-row"
+import { ColumnRowData } from "@/types/ColumnRowData"
+import { SchemaMap } from "@/types/PrimitiveTypes"
 import validateField from "./helper/validateField"
 import { v4 as uuidv4 } from 'uuid';
 import { useUsername } from "@/context/username-context"
+import { SchemaResponse } from "@/types/SchemaResponse"
+import { GenRequest } from "@/types/GenRequest"
 
 export default function HomePage() {
   const { toast } = useToast()
@@ -26,12 +29,6 @@ export default function HomePage() {
   const [showPostgresForm, setShowPostgresForm] = useState(false)
 
   const username = useUsername();
-
-  const [schemaData, setSchemaData] = useState({
-    schemaRegistryUrl: "",
-    tableName: "",
-    option: "",
-  })
 
   const [postgresData, setPostgresData] = useState({
     host: "10.8.75.82",
@@ -72,10 +69,6 @@ export default function HomePage() {
     }
   }
 
-  const handleOptionChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, option: value }))
-  }
-
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     const error = validateField(name, value)
@@ -108,7 +101,7 @@ export default function HomePage() {
     setIsSubmitting(true)
 
     try {
-      fetch("/api/gen", {
+      fetch("/api/schema", {
         method: "POST",
         body: JSON.stringify(formData),
         headers: { "Content-Type": "application/json" },
@@ -116,43 +109,34 @@ export default function HomePage() {
       .then(res => res.json())
       .then(data => {
 
-        data = typeof data === "string" ? JSON.parse(data) : data // Handle stringified JSON;
-
-        if(data.sqlContentGold) {
-          const sqlContentGold = data.sqlContentGold;
-          setSQLContentGold(sqlContentGold);
-          // console.log("Gold SQL Content:", sqlContentGold);
-        }
-
-        if(data.sqlContentSilver) {
-          const sqlContentSilver = data.sqlContentSilver;
-          setSQLContentSilver(sqlContentSilver);
-          // console.log("Silver SQL Content:", sqlContentSilver);
-        }
+        const schemaResponse : SchemaResponse = data;
+        console.log(schemaResponse);
         
-        if (data.schema) {
-          const goldDDL = data.goldSql;
-          setGoldDDL(goldDDL);
-          // console.log("Gold DDL:", goldDDL);
-          const schema : SchemaMap = data.schema;
-          // console.log(schema);
+        if (schemaResponse.schema) {
+          const schema : SchemaMap = schemaResponse.schema;
 
           Object.entries(schema).forEach(([columnName, columnType], idx) => {
-            addRow(columnName, columnType, "NONE");
-            // Add row
+            addRow(columnName, columnType, "NONE"); // Add Row for each schema entry
           });
+          
         }
+        else {
+          alert("Error 204. No schema data received from server.");
+        }
+
+        // Update registryUrl & table name in form data
+        schemaResponse.registryUrl && setFormData((prev) => ({...prev, registryUrl: schemaResponse.registryUrl}));
+        schemaResponse.tableName && setFormData((prev) => ({...prev, tableName: schemaResponse.tableName}));
+        
       })
       .finally(() => {
         console.log("Fetch operation completed.");
-        console.log(rows);
       }); 
       toast({
         title: "Success",
         description: "Schema registry data processed successfully!",
       })
 
-      setSchemaData(formData)
       setShowColumnForm(true)
     } catch (error: any) {
       toast({
@@ -198,31 +182,29 @@ export default function HomePage() {
     }
 
     try {
-      fetch("/api/gen_gold", {
+      const requestBody : GenRequest = {
+          columns: rows,
+          tableName: formData.tableName,
+          author: username,
+      }
+
+      console.log(requestBody.columns);
+
+      const data = await fetch('api/gen', {
         method: "POST",
-        body: JSON.stringify({
-          sqlContentGold: sqlContentGold,
-          goldDDL: goldDDL,
-          columns: rows.map((row) => ({
-            name: row.columnName,
-            type: row.type,
-            aggregate: row.aggregateMethod == "NONE" ? "" : row.aggregateMethod,
-          })),
-        }),
+        body: JSON.stringify(requestBody),
         headers: { "Content-Type": "application/json" },
-      })
-      .then(res => res.json())
-      .then(data => {
-        setSQLContentGold(data.sqlContentGold);
-        // console.log(data);
       });
+      const result = await data.json()
+      console.log(result);
+
 
       toast({
         title: "Success!",
         description: `Submitted ${rows.length} column(s) configuration`,
       })
 
-      setShowPostgresForm(prev => true)
+      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -231,7 +213,8 @@ export default function HomePage() {
       })
       console.log(error);
     } finally {
-      setIsSubmittingColumns(false)
+      setIsSubmittingColumns(false);
+      setShowPostgresForm(prev => true);
     }
   }
 
@@ -324,7 +307,7 @@ export default function HomePage() {
 
               <div className="space-y-3">
                 <Label>Option</Label>
-                <RadioGroup value={formData.option} onValueChange={handleOptionChange} disabled={showColumnForm}>
+                <RadioGroup value={formData.option} disabled={showColumnForm}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="" id="both" disabled={showColumnForm} />
                     <Label htmlFor="both" className="font-normal cursor-pointer">
