@@ -23,6 +23,7 @@ export default function DBExplorerPage() {
   const [queryResults, setResults] = useState<ETLConfig[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
+  const [deleteRowId, setDeleteRowId] = useState<number|null>(null)
   const [columnsConfig, setcolumnsConfig] = useState<ColumnType[]>([])
   
   const username = useUsername();
@@ -52,10 +53,12 @@ export default function DBExplorerPage() {
     setDbConfigured(true)
   }
 
-const handleIdClick = (rowId: number) => {
+const handleIdClick = async (rowId: number) => {
+  setDeleteRowId(prev => prev = rowId);
   const confirmDelete = confirm(`Do you want to delete row ID #${rowId}?`);
   if (confirmDelete) {
-    fetch(`/api/etl_config_table/${rowId}`, {
+    try {
+      const Data = await fetch(`/api/etl_config_table/${rowId}`, {
         method: 'DELETE',
 
         body: JSON.stringify({
@@ -68,45 +71,48 @@ const handleIdClick = (rowId: number) => {
             tableName: dbData.tableName,
           },
         }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(`ETL Config ID #${rowId} deleted successfully.`);
-            // Optionally, you can add logic to refresh the table or remove the row from the UI
-            setResults(prev => prev.filter(item => item.id !== rowId));
-        } else {
-            alert(`Failed to delete ETL Config ID #${rowId}: ${data.error}`);
-        }
-    })
-    .catch(error => {
+      });
+      const response = await Data.json();
+      if (response.success) {
+        console.log(response);
+        alert(`ETL Config ID #${rowId} deleted successfully.`);
+        // Optionally, you can add logic to refresh the table or remove the row from the UI
+        setResults(prev => prev.filter(item => item.id !== rowId));
+      }
+      else {
+          alert(`Failed to delete ETL Config ID #${rowId}: ${response.error}`);
+      }
+
+    } catch (error) {
         console.error('Error deleting ETL Config:', error);
-        alert(`An error occurred while deleting ETL Config ID #${rowId}.`);
-    })
-    .finally(() => {
+        alert(`An error occurred while deleting ETL Config ID #${rowId}.`);      
+    } finally {
         // Any cleanup actions if necessary
         console.log('Delete request ran.');
-    });
+        setDeleteRowId(prev => prev = null);
+    };
   }
 }
 
 
   const handleRowClick = (rowId: number) => {
-    console.log("Row clicked with ID:", rowId);
-    setSelectedRowId(rowId)
-    setIsDialogOpen(true)
-    setcolumnsConfig(prev => prev = Object.entries(queryResults.filter((row) => row.id === rowId)[0])
-      .map(([key, value]) => {
-        return {
-          id: uuidv4(),
-          key: key,
-          value: String(value),
-          dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",
-          options: key === "layer" ? ["gold", "silver"] : key === "enabled" ? ["true", "false"] : undefined,
-        }
-      })
-    );
-    console.log("Loaded columns config:", columnsConfig);
+    if(deleteRowId) {
+      console.log("Row clicked with ID:", rowId);
+      setSelectedRowId(rowId)
+      setIsDialogOpen(true)
+      setcolumnsConfig(prev => prev = Object.entries(queryResults.filter((row) => row.id === rowId)[0])
+        .map(([key, value]) => {
+          return {
+            id: uuidv4(),
+            key: key,
+            value: String(value),
+            dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",
+            options: key === "layer" ? ["gold", "silver"] : key === "enabled" ? ["true", "false"] : undefined,
+          }
+        })
+      );
+      console.log("Loaded columns config:", columnsConfig);
+    }
   }
 
   const addInputRow = (type: "text" | "select" | "textarea") => {

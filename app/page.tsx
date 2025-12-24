@@ -10,13 +10,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ColumnRow } from "@/components/column-row"
-import { ColumnRowData } from "@/types/ColumnRowData"
+import { AggregateMethod, ColumnRowData } from "@/types/ColumnRowData"
 import { SchemaMap } from "@/types/PrimitiveTypes"
 import validateField from "./helper/validateField"
 import { v4 as uuidv4 } from 'uuid';
 import { useUsername } from "@/context/username-context"
 import { SchemaResponse } from "@/types/SchemaResponse"
 import { GenRequest } from "@/types/GenRequest"
+import { GenResponse } from "@/types/GenResponse"
 
 export default function HomePage() {
   const { toast } = useToast()
@@ -75,7 +76,7 @@ export default function HomePage() {
     setErrors((prev) => ({ ...prev, [name]: error }))
   }
 
-  const addRow = (aColumnName="", aType="", aAggregateMethod="") => {
+  const addRow = (aColumnName: string="", aType: string="", aAggregateMethod : AggregateMethod="") => {
     setRows(prevRows => [...prevRows, { id: uuidv4() /*crypto.randomUUID()*/, columnName: aColumnName, type: aType, aggregateMethod: aAggregateMethod }])
   }
 
@@ -195,7 +196,9 @@ export default function HomePage() {
         body: JSON.stringify(requestBody),
         headers: { "Content-Type": "application/json" },
       });
-      const result = await data.json()
+      const result: GenResponse = await data.json();
+      setSQLContentSilver(result.silverConfigQuery!);
+      setSQLContentGold(result.goldConfigQuery!);
       console.log(result);
 
 
@@ -224,27 +227,20 @@ export default function HomePage() {
 
     try {
       // Connect DB and submit ETL config
-      try {
-        fetch("/api/submit_etl_config", {
-          method: "POST",
-          body: JSON.stringify({
-            poolCredentials: postgresData,
-            sqlContentGold: sqlContentGold,
-            sqlContentSilver: sqlContentSilver,
-          }),
-          headers: { "Content-Type": "application/json" },
-        })
-        .then(res => res.json())
-        .then(data => {
-          toast({
-            title: "Success",
-            description: "PostgreSQL configuration submitted successfully!",
-          })
-        });
-      } catch (error) {
-        console.log("Error submitting ETL config:", error);
-      }
-
+      console.log(sqlContentGold);
+      console.log(sqlContentSilver);
+      const data = await fetch("/api/etl_config_table/submit", {
+        method: "POST",
+        body: JSON.stringify({
+          poolCredentials: postgresData,
+          sqlContentGold: sqlContentGold,
+          sqlContentSilver: sqlContentSilver,
+        }),
+        headers: { "Content-Type": "application/json" },
+      })
+      const res = await data.json();
+      console.log(res);
+      
       console.log("PostgreSQL data:", postgresData)
     } catch (error: any) {
       toast({
@@ -252,6 +248,7 @@ export default function HomePage() {
         description: error.message || "Failed to process PostgreSQL configuration",
         variant: "destructive",
       })
+      console.log("Error submitting ETL config:", error);
     } finally {
       setIsSubmittingPostgres(false)
     }
