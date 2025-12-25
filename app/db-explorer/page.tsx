@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { ETLConfigTable, type ETLConfig } from "@/components/etl-config-table"
+import { ETLConfigTable, type ETLConfig } from "@/components/ETLConfigTable"
 import { Database, Search, Loader2, Plus, Trash2, Key } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
 import { v4 as uuidv4 } from "uuid"
@@ -42,19 +42,8 @@ export default function DBExplorerPage() {
     tableName: "",
   })
 
-  const handleDbSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // Create a new pool instance
-
-    toast({
-      title: "Connection Successful",
-      description: `Connected to ${dbData.database} on ${dbData.host}`,
-    })
-    setDbConfigured(true)
-  }
-
 const handleIdClick = async (rowId: number) => {
-  setDeleteRowId(prev => prev = rowId);
+  setDeleteRowId(rowId);
   const confirmDelete = confirm(`Do you want to delete row ID #${rowId}?`);
   if (confirmDelete) {
     try {
@@ -80,7 +69,7 @@ const handleIdClick = async (rowId: number) => {
         setResults(prev => prev.filter(item => item.id !== rowId));
       }
       else {
-          alert(`Failed to delete ETL Config ID #${rowId}: ${response.error}`);
+        alert(`Failed to delete ETL Config ID #${rowId}: ${response.error}`);
       }
 
     } catch (error) {
@@ -96,23 +85,23 @@ const handleIdClick = async (rowId: number) => {
 
 
   const handleRowClick = (rowId: number) => {
-    if(deleteRowId) {
-      console.log("Row clicked with ID:", rowId);
-      setSelectedRowId(rowId)
-      setIsDialogOpen(true)
-      setcolumnsConfig(prev => prev = Object.entries(queryResults.filter((row) => row.id === rowId)[0])
-        .map(([key, value]) => {
-          return {
-            id: uuidv4(),
-            key: key,
-            value: String(value),
-            dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",
-            options: key === "layer" ? ["gold", "silver"] : key === "enabled" ? ["true", "false"] : undefined,
-          }
-        })
-      );
-      console.log("Loaded columns config:", columnsConfig);
-    }
+    console.log("Row clicked with ID:", rowId);
+    setSelectedRowId(rowId)
+    setIsDialogOpen(true)
+    setcolumnsConfig(prev => prev = Object.entries(queryResults.filter((row) => row.id === rowId)[0])
+      .map(([key, value]) => {
+        return {
+          id: uuidv4(),
+          key: key,
+          value: String(value),
+          dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",
+          options: key === "layer" ? ["gold", "silver"] : key === "enabled" ? ["true", "false"] : undefined,
+        }
+      })
+    );
+
+    
+    console.log("Loaded columns config:", columnsConfig);
   }
 
   const addInputRow = (type: "text" | "select" | "textarea") => {
@@ -277,7 +266,7 @@ const handleIdClick = async (rowId: number) => {
               <CardDescription>Database connection settings</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleDbSubmit} className="space-y-2">
+              <form className="space-y-2">
                 <div className="space-y-2">
                   <Label htmlFor="host">Host</Label>
                   <Input
@@ -343,15 +332,20 @@ const handleIdClick = async (rowId: number) => {
                   />
                 </div>
                 {!dbConfigured ? (
-                  <Button type="submit" className="w-full">
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => setDbConfigured((prev) => prev = true)}
+                  >
                     Configure Database
+                    
                   </Button>
                 ) : (
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full bg-transparent"
-                    onClick={() => setDbConfigured(false)}
+                    onClick={() => setDbConfigured((prev) => prev = false)}
                   >
                     Edit Connection
                   </Button>

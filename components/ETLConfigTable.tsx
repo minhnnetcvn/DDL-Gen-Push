@@ -75,8 +75,12 @@ export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowCl
               </TableRow>
             ) : (
               data.map((row) => (
-                <TableRow className="cursor-pointer" key={row.id} onClick={() => onRowClick?.(row.id)}>
-                  <TableCell className="font-medium cursor-pointer hover:line-through" onClick={() => onIdClick?.(row.id)}>#{row.id}</TableCell>
+                <TableRow className="cursor-pointer" key={row.id} onClick={(e) => onRowClick?.(row.id)}>
+                  <TableCell className="font-medium cursor-pointer hover:line-through" onClick={(e) => {
+                    e.stopPropagation();
+                    onIdClick?.(row.id);
+                  }}>
+                      #{row.id}</TableCell>
                   <TableCell>
                     <Badge variant={row.layer.toLowerCase() === "gold" ? "default" : "secondary"}>{row.layer}</Badge>
                   </TableCell>

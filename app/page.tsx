@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { ColumnRow } from "@/components/column-row"
+import { ColumnRow } from "@/components/ColumnRow"
 import { AggregateMethod, ColumnRowData } from "@/types/ColumnRowData"
 import { SchemaMap } from "@/types/PrimitiveTypes"
 import validateField from "./helper/validateField"
@@ -18,11 +18,12 @@ import { useUsername } from "@/context/username-context"
 import { SchemaResponse } from "@/types/SchemaResponse"
 import { GenRequest } from "@/types/GenRequest"
 import { GenResponse } from "@/types/GenResponse"
+import validateColumnsConfig from "./helper/validateColumnsConfig"
+import ColumnBuilder from "@/components/ColumnBuilder"
 
 export default function HomePage() {
   const { toast } = useToast()
 
-  const [goldDDL, setGoldDDL] = useState("")
   const [sqlContentGold, setSQLContentGold] = useState("")
   const [sqlContentSilver, setSQLContentSilver] = useState("")
 
@@ -166,16 +167,16 @@ export default function HomePage() {
     setRows(rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)))
   }
 
-  const handleColumnSubmit = async (e: React.FormEvent) => {
+  const handleColumnsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmittingColumns(true)
 
-    const invalidRows = rows.filter((row) => !row.columnName || !row.type || !row.aggregateMethod)
+    const {isInvalidExists, invalidConfigs} = validateColumnsConfig(rows)
 
-    if (invalidRows.length > 0) {
+    if (isInvalidExists) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all fields for each row",
+        description: `Please fill in all fields for rows ${invalidConfigs?.join(', ')}`,
         variant: "destructive",
       })
       setIsSubmittingColumns(false)
@@ -336,54 +337,14 @@ export default function HomePage() {
         </Card>
 
         {showColumnForm && (
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CardHeader>
-              <CardTitle>Column Configuration</CardTitle>
-              <CardDescription>Define columns with their names, data types, and aggregate methods</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleColumnSubmit} className="space-y-6">
-                <div className="flex justify-end">
-                  <Button type="button" onClick={() => addRow()} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Row
-                  </Button>
-                </div>
-
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="text-left p-4 font-medium text-sm">Column Name</th>
-                          <th className="text-left p-4 font-medium text-sm">Type</th>
-                          <th className="text-left p-4 font-medium text-sm">Aggregate Method</th>
-                          <th className="w-16 p-4"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {rows.map((row) => (
-                          <ColumnRow
-                            key={row.id}
-                            row={row}
-                            onUpdate={updateRow}
-                            onRemove={removeRow}
-                            canRemove={rows.length > 1}
-                          />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isSubmittingColumns}>
-                    {isSubmittingColumns ? "Submitting..." : "Submit Configuration"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+          <ColumnBuilder
+            addRow={addRow} 
+            columnsConfig={rows}
+            handleColumnsSubmit={handleColumnsSubmit}
+            isSubmittingColumns={isSubmittingColumns}
+            removeRow={removeRow}
+            updateRow={updateRow} 
+          />
         )}
 
         {showPostgresForm && (

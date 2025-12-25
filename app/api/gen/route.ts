@@ -10,18 +10,10 @@ export async function POST(request: Request) {
     try {
         const Data : GenRequest = await request.json();
 
-        // DDL column type
-        // SQL Column only or aggregate as alias
-        // const columns = Data.columns.map((aColumn) => ({
-        //     name: aColumn.columnName,
-        //     type: aColumn.type,
-        //     aggregate: aColumn.aggregateMethod === "NONE" ? "" : aColumn.aggregateMethod,
-        // }))
-
         const columnClass : ColumnsClassificationType = generateColumnSQL(Data.columns);
 
         const ddlParams: DDLParams = {
-            tableName: Data.tableName,
+            tableName: Data.tableName.toLowerCase(),
             allColumnsDefinitions: columnClass.dimensionDefinitions + ",\n          	" + columnClass.aggregatesDefinitions,
             aggregateDefinitions : columnClass.aggregatesDefinitions,
             dimensionDefinitions : columnClass.dimensionDefinitions,
