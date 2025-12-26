@@ -1,13 +1,10 @@
 import { ColumnRowData } from "@/types/ColumnRowData"
 import type React from "react"
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Plus } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { toast, useToast } from "@/hooks/useToast"
 import { ColumnRow } from "@/components/ColumnRow"
 
 
@@ -15,13 +12,25 @@ import { ColumnRow } from "@/components/ColumnRow"
 interface ColumnBuilderProps {
     columnsConfig: ColumnRowData[];
     handleColumnsSubmit: (e: React.FormEvent) => void;
-    addRow: () => void;
-    updateRow: (id: string, field: keyof Omit<ColumnRowData, "id">, value: string) => void;
-    removeRow: (id: string) => void;
+    addColumn: () => void;
+    updateColumn: (id: string, field: keyof Omit<ColumnRowData, "id">, value: string) => void;
+    removeColumn: (id: string) => void;
     isSubmittingColumns: boolean
 }
 
-export default function ColumnBuilder({columnsConfig, handleColumnsSubmit, addRow, updateRow, removeRow, isSubmittingColumns}: ColumnBuilderProps) {
+export default function ColumnBuilder({columnsConfig, handleColumnsSubmit, addColumn, updateColumn, removeColumn, isSubmittingColumns}: ColumnBuilderProps) {
+    const handleRemoveColumn = (id: string) => {
+        if (columnsConfig.length === 1) {
+            toast({
+                title: "Cannot remove",
+                description: "At least one row is required",
+                variant: "destructive",
+            });
+            return
+        }
+        removeColumn(id);
+    }
+    
     return (
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CardHeader>
@@ -31,7 +40,7 @@ export default function ColumnBuilder({columnsConfig, handleColumnsSubmit, addRo
             <CardContent>
                 <form onSubmit={handleColumnsSubmit} className="space-y-6">
                     <div className="flex justify-end">
-                    <Button type="button" onClick={() => addRow()} size="sm">
+                    <Button type="button" onClick={() => addColumn()} size="sm">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Row
                     </Button>
@@ -53,8 +62,8 @@ export default function ColumnBuilder({columnsConfig, handleColumnsSubmit, addRo
                             <ColumnRow
                                 key={aConfig.id}
                                 row={aConfig}
-                                onUpdate={updateRow}
-                                onRemove={removeRow}
+                                onUpdate={updateColumn}
+                                onRemove={() => handleRemoveColumn(aConfig.id)}
                                 canRemove={columnsConfig.length > 1}
                             />
                             ))}
