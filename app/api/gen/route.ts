@@ -4,16 +4,21 @@ import { GenRequest } from "@/types/GenRequest";
 import { GenResponse } from "@/types/GenResponse";
 import { ConfigParams, DDLParams } from "@/types/Params";
 import { SQLQuery } from "@/types/PrimitiveTypes";
+import { TableTypes } from "@/types/TableConfig";
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
     try {
         const Data : GenRequest = await request.json();
 
+        const tableType : TableTypes = Data.tableType;
+        console.log("Table type: ", tableType == "dim");
+
         const columnClass : ColumnsClassificationType = generateColumnSQL(Data.columns);
 
         const ddlParams: DDLParams = {
             tableName: Data.tableName.toLowerCase(),
+            tableType: tableType,
             allColumnsDefinitions: columnClass.dimensionDefinitions + ",\n          	" + columnClass.aggregatesDefinitions,
             aggregateDefinitions : columnClass.aggregatesDefinitions,
             dimensionDefinitions : columnClass.dimensionDefinitions,
@@ -27,13 +32,18 @@ export async function POST(request: Request) {
             pkColumns: columnClass.dimensionColumns,
             tableNameLower: Data.tableName.toLowerCase(),
             tableNameUpper: Data.tableName.toUpperCase(),
+            tableType: tableType
         }
         
         const goldConfigQuery : SQLQuery = goldConfig({
             ...configParams,
             ddl: goldDdlQuery,
-            transformSQL: transformSQLContent({aggregateColumns: columnClass.aggregateColumns, dimensionColumns: columnClass.dimensionColumns})
-
+            transformSQL: transformSQLContent({
+                aggregateColumns: columnClass.aggregateColumns,
+                dimensionColumns: columnClass.dimensionColumns,
+                tableNameLower: Data.tableName.toLowerCase(),
+                tableType: tableType
+            }),
         })
         
         const silverConfigQuery : SQLQuery = silverConfig({

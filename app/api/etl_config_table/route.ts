@@ -6,6 +6,8 @@ export async function POST(request: Request) {
     try {
         const {poolCredentials: postgresData, queryFilters: queryData} = await request.json();
 
+        // console.log(postgresData.tableName);
+
         const query = `SELECT * FROM ${postgresData.tableName}
             ${queryData.tableName !== "" || queryData.layer !== "all" ? "WHERE" : ""}
             ${queryData.tableName !== "" ? `source_table_name ILIKE \'%${queryData.tableName}%\'
@@ -15,7 +17,7 @@ export async function POST(request: Request) {
             ${queryData.tableName !== "" && queryData.layer !== "all" ? ' AND ' : ''}
             ${queryData.layer === "all" ? "" : `layer = \'${queryData.layer}\'`}
         `;
-        // console.log("ETL Config Query:", query);
+        // console.log(query);
 
         await pool(postgresData.host, postgresData.port, postgresData.user, postgresData.password, postgresData.db).query(
             query

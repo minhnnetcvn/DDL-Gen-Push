@@ -39,17 +39,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         const {id} = await params; // "3" → 3
 
         const {poolCredentials: postgresData} = await request.json();
-        console.log("Received ETL Config Deletion Request for ID:", id);
-        console.log("Using Postgres Credentials:", postgresData);
 
         let query = `DELETE FROM ${postgresData.tableName} WHERE id = $1;`;
-        console.log(query);
 
         pool(postgresData.host, postgresData.port, postgresData.user, postgresData.password, postgresData.db)
         .query(query, [id])
         .then((res) => {
             console.log(`ETL Config with ID #${id} deleted successfully.`);
-            console.log(res)
             return new NextResponse(JSON.stringify({ success: true, message: `ETL Config with ID #${id} deleted successfully. ${res.rowCount} row(s) affected.` }), { status: 200 });
         })
         .catch((error) => {

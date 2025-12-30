@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { Database, Home, User } from "lucide-react"
-import { useUsername } from "@/context/username-context"
+import { useUsername } from "@/context/usernameContext"
 
 export function Navbar() {
   const username = useUsername();

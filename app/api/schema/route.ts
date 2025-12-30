@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "..\\next-js-forms\\scripts\\generate-etl-configs.ps1",
+        "..\\etl-table-config-crud\\scripts\\generate-etl-configs.ps1",
         "-registryUrl",
         data.schemaRegistryUrl,
         "-TableName",
