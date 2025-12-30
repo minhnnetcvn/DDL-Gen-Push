@@ -19,6 +19,10 @@ export function PostgresContextProvider({children}: {children: React.ReactNode})
         user: "postgres",
         tableName: "etl_table_config",
     });
+
+    useEffect(() => {
+        console.log(databaseConfig);
+    }, [databaseConfig])
     
     return (
         <PostgresContext.Provider value={{databaseConfig, setDatabaseConfig}}>

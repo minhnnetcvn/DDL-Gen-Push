@@ -34,7 +34,7 @@ export default function PostgresConfig(props: PostgresFormProps) {
     try {
       setIsSubmittingPostgres(prev => prev = true);
       props.submitConfig ? props.submitConfig(postgresData) : "";
-      setDatabaseConfig(postgresData);
+      setDatabaseConfig(prev => prev = postgresData);
       props.setIsDbConfigured ? props.setIsDbConfigured(true) : "";
     }
     catch (error) {

@@ -11,13 +11,14 @@ import { SchemaMap } from "@/types/PrimitiveTypes";
 import { SchemaResponse } from "@/types/SchemaResponse";
 import { useState, Dispatch, SetStateAction } from "react";
 import { AggregateMethod } from "@/types/ColumnRowData";
+import { TableConfig } from "@/types/TableConfig";
 
 interface SchemaRegistryProp {
     addColumn: (aColumnName: string, aType: string, aAggregateMethod : AggregateMethod) => void;
     resetColumns: () => void;
     showColumnsConfig: boolean;
     setShowColumnsConfig: Dispatch<SetStateAction<boolean>>;
-    setTableName: Dispatch<SetStateAction<string|null>>;
+    setTableConfig: Dispatch<SetStateAction<TableConfig>>;
 }
 
 export function SchemaRegistry(props: SchemaRegistryProp) {
@@ -88,25 +89,34 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
             const schema : SchemaMap = schemaResponse.schema;
 
             Object.entries(schema).forEach(([columnName, columnType], idx) => {
-                props.addColumn(columnName, columnType, "NONE"); // Add Row for each schema entry
+                props.addColumn(columnName, columnType, "LAST_VALUE"); // Add Row for each schema entry
             });
-          
+
+            props.setShowColumnsConfig(true);
+
+            toast({
+              title: "Success",
+              description: "Schema registry data processed!",
+          })
           }
           else {
             alert("Error 204. No schema data received from server.");
+
+            toast({
+              title: "Error",
+              description: "No schema matches",
+              variant: "destructive",
+            })
           }
 
-            // Update registryUrl & table name in form data
           schemaResponse.registryUrl && setFormData((prev) => ({...prev, registryUrl: schemaResponse.registryUrl}));
           schemaResponse.tableName && setFormData((prev) => ({...prev, tableName: schemaResponse.tableName}));
-          props.setTableName(schemaResponse.tableName)
-
-          toast({
-              title: "Success",
-              description: "Schema registry data processed successfully!",
+          props.setTableConfig(prev => {
+            return {
+              ...prev,
+              tableName: schemaResponse.tableName
+            }
           })
-
-          props.setShowColumnsConfig(true)
         } catch (error: any) {
           toast({
               title: "Error",

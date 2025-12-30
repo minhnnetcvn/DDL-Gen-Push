@@ -8,7 +8,7 @@ export function useColumnsConfig() {
   const addColumn = (
     columnName: string = "",
     type: string = "",
-    aggregateMethod: AggregateMethod = ""
+    aggregateMethod: AggregateMethod = "LAST_VALUE"
   ) => {
     setColumnsConfig(prev => [
       ...prev,

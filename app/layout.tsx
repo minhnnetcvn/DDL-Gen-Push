@@ -11,9 +11,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Next.js Forms Examples",
-  description: "A collection of form components with different patterns and use cases",
-  generator: "v0.app",
+  title: "ETL Table Configurator",
   icons: {
   },
 }

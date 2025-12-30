@@ -75,7 +75,7 @@ export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowCl
               </TableRow>
             ) : (
               data.map((row) => (
-                <TableRow className="cursor-pointer" key={row.id} onClick={(e) => onRowClick?.(row.id)}>
+                <TableRow className="cursor-pointer" key={row.id} onClick={(e) => onRowClick? onRowClick(row.id): ""}>
                   <TableCell className="font-medium cursor-pointer hover:line-through" onClick={(e) => {
                     e.stopPropagation();
                     onIdClick?.(row.id);

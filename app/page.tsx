@@ -16,26 +16,28 @@ import PostgresConfig from "@/components/PostgresConfig"
 import { GenericResponse } from "@/types/GenericResponse"
 import { useColumnsConfig } from "@/hooks/useColumnConfigs"
 import { PostgresContextProvider } from "@/context/postgresContext"
+import { TableConfig, TableTypes } from "@/types/TableConfig"
 
 export default function HomePage() {
   const { toast } = useToast()
 
-  const [sqlContentGold, setSQLContentGold] = useState("")
-  const [sqlContentSilver, setSQLContentSilver] = useState("")
+  const [sqlContentGold, setSQLContentGold] = useState("");
+  const [sqlContentSilver, setSQLContentSilver] = useState("");
 
-  const [showColumnsConfig, setShowColumnsConfig] = useState(false)
-  const [showPostgresForm, setShowPostgresForm] = useState(false)
+  const [showColumnsConfig, setShowColumnsConfig] = useState(false);
+  const [showPostgresForm, setShowPostgresForm] = useState(false);
 
   const username = useUsername();
 
-  const [tableName, setTableName] = useState<string | null>("");
-  // const [columnsConfig, setRows] = useState<ColumnRowData[]>([])
+  const [tableConfig, setTableConfig] = useState<TableConfig>({
+    tableName: "",
+    tableType: "dim",
+  });
   const [isSubmittingColumns, setIsSubmittingColumns] = useState(false)
 
   const { columnsConfig, addColumn, removeColumn, updateColumn, resetColumns } = useColumnsConfig()
 
-  const handleColumnsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitColumns = async (tableType: TableTypes) => {
     setIsSubmittingColumns(true)
 
     const { isInvalidExists, invalidConfigs } = validateColumnsConfig(columnsConfig)
@@ -53,7 +55,8 @@ export default function HomePage() {
     try {
       const requestBody: GenRequest = {
         columns: columnsConfig,
-        tableName: tableName!,
+        tableName: tableConfig?.tableName!,
+        tableType: tableType,
         author: username,
       }
 
@@ -68,7 +71,6 @@ export default function HomePage() {
       setSQLContentSilver(result.silverConfigQuery!);
       setSQLContentGold(result.goldConfigQuery!);
       console.log(result);
-
 
       toast({
         title: "Success!",
@@ -131,13 +133,13 @@ export default function HomePage() {
             <p className="text-muted-foreground text-lg">Create Table for ETL Config</p>
           </div>
 
-          <SchemaRegistry addColumn={addColumn} showColumnsConfig={showColumnsConfig} setShowColumnsConfig={setShowColumnsConfig} setTableName={setTableName} resetColumns={resetColumns} />
+          <SchemaRegistry addColumn={addColumn} showColumnsConfig={showColumnsConfig} setShowColumnsConfig={setShowColumnsConfig} setTableConfig={setTableConfig} resetColumns={resetColumns} />
 
           {showColumnsConfig && (
             <ColumnBuilder
               addColumn={addColumn}
               columnsConfig={columnsConfig}
-              handleColumnsSubmit={handleColumnsSubmit}
+              submitColumns={submitColumns}
               isSubmittingColumns={isSubmittingColumns}
               removeColumn={removeColumn}
               updateColumn={updateColumn}

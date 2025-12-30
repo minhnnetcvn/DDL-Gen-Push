@@ -1,24 +1,18 @@
 "use client"
 
-import type React from "react"
-import { Dispatch, SetStateAction, useState } from "react"
+import { Dispatch, SetStateAction } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useToast } from "@/hooks/useToast"
-import { ETLConfigTable, type ETLConfig } from "@/components/ETLConfigTable"
-import { Database, Search, Loader2, Plus, Trash2, Key } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
 import { v4 as uuidv4 } from "uuid"
-import { useUsername } from "@/context/usernameContext"
-import PostgresConfig from "@/components/PostgresConfig"
 import { DatabaseConfig } from "@/types/DatabaseConfig"
-import { PostgresContextProvider, usePostgresConfig } from "@/context/postgresContext"
-import QueryBuilder, { QueryData } from "@/components/QueryBuilder"
+import { usePostgresConfig } from "@/context/postgresContext"
 
 interface propsConfigDialogue {
     columnsConfig: ColumnType[];
@@ -32,6 +26,9 @@ interface propsConfigDialogue {
 }
 
 export default function ConfigDialogue(props: propsConfigDialogue) {
+	    const {databaseConfig} = usePostgresConfig();
+
+
     const addInputRow = (type: "text" | "select" | "textarea") => {
         const newRow: ColumnType = {
             id: uuidv4(),
@@ -54,25 +51,25 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
         props.setcolumnsConfig(props.columnsConfig.map((column) => (column.id === id ? { ...column, key: newKeyName } : column)))
     }
 
-    async function handleDialogSave(selectedRowId: number | null, columnsConfig: ColumnType[], postgresConfig: DatabaseConfig) {
-        console.log("Saving configuration for row ID:", selectedRowId);
-        if (selectedRowId === null) {
+    async function handleDialogSave() {
+        console.log("Saving configuration for row ID:", props.selectedRowId);
+        if (props.selectedRowId === null) {
             alert("No row selected for update.");
             return;
         }
 
         // Update DB Record
-        props.updateQuery(selectedRowId, postgresConfig, columnsConfig)
+        props.updateQuery(props.selectedRowId, databaseConfig, props.columnsConfig)
         
 
-        setIsDialogOpen(false)
+        props.setIsDialogOpen(false)
     }
 
     return (
         <Dialog open={props.isDialogOpen} onOpenChange={props.setIsDialogOpen}>
           <DialogContent className="w-[90vw] h-[90vh] overflow-hidden flex flex-col max-w-none max-h-none">
             <DialogHeader>
-              <DialogTitle>Edit Row Configuration {selectedRowId !== null && `(ID: ${selectedRowId})`}</DialogTitle>
+              <DialogTitle>Edit Row Configuration {props.selectedRowId !== null && `(ID: ${props.selectedRowId})`}</DialogTitle>
               <DialogDescription>
                 Customize your input fields below. Click the add buttons to create new rows.
               </DialogDescription>
@@ -145,28 +142,24 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 
             <div className="border-t pt-4 space-y-4">
               <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => addInputRow("text")}>
+                <Button className="cursor-pointer" type="button" variant="outline" size="sm" onClick={() => addInputRow("text")}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Text Input
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => addInputRow("select")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Select
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => addInputRow("textarea")}>
+                <Button type="button" variant="outline" className="cursor-pointer" size="sm" onClick={() => addInputRow("textarea")}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Textarea
                 </Button>
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button variant="outline" onClick={() => props.setIsDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button
                   onClick={() => {
-                    handleDialogSave(selectedRowId, columnsConfig)
-                    setIsDialogOpen(false)
+                    handleDialogSave()
+                    props.setIsDialogOpen(false)
                   }}
                 >
                   Save Configuration

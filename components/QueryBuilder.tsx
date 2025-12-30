@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,10 +25,12 @@ export default function QueryBuilder(props : QueryBuilderProps) {
         tableName: "",
     });
 
-    const {databaseConfig, setDatabaseConfig} = usePostgresConfig();
+    const {databaseConfig} = usePostgresConfig();
     
-    const handleQuerySubmit = (databaseConfig: DatabaseConfig) => {
-        props.submitQuery(databaseConfig);
+    const handleQuerySubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		
+        props.submitQuery(databaseConfig, queryData);
     };
 
     return (
@@ -40,7 +41,7 @@ export default function QueryBuilder(props : QueryBuilderProps) {
                   <CardDescription>Search for specific ETL configurations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={() => handleQuerySubmit(databaseConfig)} className="space-y-6">
+                  <form onSubmit={handleQuerySubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="layer">Layer</Label>
