@@ -1,11 +1,7 @@
 services:
-  nextjs:
-    container_name: etl-table-config
-    build:
-      context: .
-      dockerfile: Dockerfile
+  tool:
+    container_name: etl-table-config-tool
+    image: minhnnetc/etl-table-config-crud:latest
     ports:
       - "3000:3000"
-    environment:
-      NODE_ENV: production
     restart: unless-stopped
