@@ -132,7 +132,8 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Get Schema Registry</CardTitle>
+				<CardTitle>Step 1: Get Schema Registry
+</CardTitle>
 				<CardDescription>Configure schema registry with URL, table name, and option validation</CardDescription>
 			</CardHeader>
 			<CardContent>

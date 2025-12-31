@@ -19,9 +19,9 @@ export async function POST(request: Request) {
         const ddlParams: DDLParams = {
             tableName: Data.tableName.toLowerCase(),
             tableType: tableType,
-            allColumnsDefinitions: columnClass.dimensionDefinitions + ",\n          	" + columnClass.aggregatesDefinitions,
-            aggregateDefinitions : columnClass.aggregatesDefinitions,
-            dimensionDefinitions : columnClass.dimensionDefinitions,
+            allColumnsDefinitions: columnClass.allColumnsDefinitions,
+            dimensionColumnTransform : columnClass.dimensionColumnTransform,
+            goldColumnTransform : columnClass.goldColumnTransform,
         }
 
         const silverDdlQuery: SQLQuery = silverDDL(ddlParams);
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
         const configParams : Omit<ConfigParams, "ddl"> = {
             createdBy: Data.author,
-            pkColumns: columnClass.dimensionColumns,
+            pkColumns: columnClass.dimensionColumnTransform,
             tableNameLower: Data.tableName.toLowerCase(),
             tableNameUpper: Data.tableName.toUpperCase(),
             tableType: tableType
@@ -39,8 +39,8 @@ export async function POST(request: Request) {
             ...configParams,
             ddl: goldDdlQuery,
             transformSQL: transformSQLContent({
-                aggregateColumns: columnClass.aggregateColumns,
-                dimensionColumns: columnClass.dimensionColumns,
+                goldColumnTransform: columnClass.goldColumnTransform,
+                dimensionColumnTransform : columnClass.dimensionColumnTransform,
                 tableNameLower: Data.tableName.toLowerCase(),
                 tableType: tableType
             }),
