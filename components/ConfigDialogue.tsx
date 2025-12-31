@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Plus, Trash2 } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
-import { v4 as uuidv4 } from "uuid"
 import { DatabaseConfig } from "@/types/DatabaseConfig"
 import { usePostgresConfig } from "@/context/postgresContext"
 
@@ -31,7 +30,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 
     const addInputRow = (type: "text" | "select" | "textarea") => {
         const newRow: ColumnType = {
-            id: uuidv4(),
+            id: crypto.randomUUID(),
             key: "",
             value: "",
             dataType: type,
