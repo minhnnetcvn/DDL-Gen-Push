@@ -1,5 +1,6 @@
 import { spawn } from "child_process"
 import { NextResponse } from "next/server"
+import { env } from "process";
 
 export async function POST(request: Request) {
   try {
@@ -7,7 +8,7 @@ export async function POST(request: Request) {
 
     const result = await new Promise<{ success: boolean; output?: string; error?: string }>((resolve, reject) => {
       // Spawn PowerShell process
-      const ps = spawn("powershell.exe", [
+      const ps = spawn(env.NODE_ENV == "production"? "pwsh": "powershell.exe", [
         "-ExecutionPolicy",
         "Bypass",
         "-File",

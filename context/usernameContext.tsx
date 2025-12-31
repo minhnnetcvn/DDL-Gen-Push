@@ -6,29 +6,29 @@ import { createContext, useContext, useEffect, useState } from "react";
 const UsernameContext = createContext<string>("");
 
 export function UsernameProvider({ children }: { children: React.ReactNode }) {
-  const [username, setUsername] = useState("");
+	const [username, setUsername] = useState("");
 
-  useEffect(() => {
-    let saved = sessionStorage.getItem("username");
+	useEffect(() => {
+		let saved = sessionStorage.getItem("username");
 
-    if (!saved || saved.trim() === "") {
-      saved = prompt("Enter your username:") || "";
-      while (!saved.trim()) {
-        saved = prompt("Invalid username.\nPlease enter your username:") || "";
-      }
-      sessionStorage.setItem("username", saved);
-    }
+		if (!saved || saved.trim() === "") {
+			saved = prompt("Enter your username:") || "";
+			while (!saved.trim()) {
+				saved = prompt("Invalid username.\nPlease enter your username:") || "";
+			}
+			sessionStorage.setItem("username", saved);
+		}
 
-    setUsername(saved);
-  }, []);
+		setUsername(saved);
+	}, []);
 
-  return (
-    <UsernameContext.Provider value={username}>
-      {children}
-    </UsernameContext.Provider>
-  );
+	return (
+		<UsernameContext.Provider value={username}>
+			{children}
+		</UsernameContext.Provider>
+	);
 }
 
 export function useUsername() {
-  return useContext(UsernameContext);
+	return useContext(UsernameContext);
 }

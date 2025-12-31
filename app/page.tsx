@@ -18,135 +18,135 @@ import { PostgresContextProvider } from "@/context/postgresContext"
 import { TableConfig, TableTypes } from "@/types/TableConfig"
 
 export default function HomePage() {
-  const { toast } = useToast()
+	const { toast } = useToast()
 
-  const [sqlContentGold, setSQLContentGold] = useState("");
-  const [sqlContentSilver, setSQLContentSilver] = useState("");
+	const [sqlContentGold, setSQLContentGold] = useState("");
+	const [sqlContentSilver, setSQLContentSilver] = useState("");
 
-  const [showColumnsConfig, setShowColumnsConfig] = useState(false);
-  const [showPostgresForm, setShowPostgresForm] = useState(false);
+	const [showColumnsConfig, setShowColumnsConfig] = useState(false);
+	const [showPostgresForm, setShowPostgresForm] = useState(false);
 
-  const username = useUsername();
+	const username = useUsername();
 
-  const [tableConfig, setTableConfig] = useState<TableConfig>({
-    tableName: "",
-    tableType: "dim",
-  });
-  const [isSubmittingColumns, setIsSubmittingColumns] = useState(false)
+	const [tableConfig, setTableConfig] = useState<TableConfig>({
+		tableName: "",
+		tableType: "dim",
+	});
+	const [isSubmittingColumns, setIsSubmittingColumns] = useState(false)
 
-  const { columnsConfig, addColumn, removeColumn, updateColumn, resetColumns } = useColumnsConfig()
+	const { columnsConfig, addColumn, removeColumn, updateColumn, resetColumns } = useColumnsConfig()
 
-  const submitColumns = async (tableType: TableTypes) => {
-    setIsSubmittingColumns(true)
+	const submitColumns = async (tableType: TableTypes) => {
+		setIsSubmittingColumns(true)
 
-    const { isInvalidExists, invalidConfigs } = validateColumnsConfig(columnsConfig)
+		const { isInvalidExists, invalidConfigs } = validateColumnsConfig(columnsConfig)
 
-    if (isInvalidExists) {
-      toast({
-        title: "Validation Error",
-        description: `Please fill in all fields for rows ${invalidConfigs?.join(', ')}`,
-        variant: "destructive",
-      })
-      setIsSubmittingColumns(false)
-      return;
-    }
+		if (isInvalidExists) {
+			toast({
+				title: "Validation Error",
+				description: `Please fill in all fields for rows ${invalidConfigs?.join(', ')}`,
+				variant: "destructive",
+			})
+			setIsSubmittingColumns(false)
+			return;
+		}
 
-    try {
-      const requestBody: GenRequest = {
-        columns: columnsConfig,
-        tableName: tableConfig?.tableName!,
-        tableType: tableType,
-        author: username,
-      }
+		try {
+			const requestBody: GenRequest = {
+				columns: columnsConfig,
+				tableName: tableConfig?.tableName!,
+				tableType: tableType,
+				author: username,
+			}
 
-      console.log(requestBody.columns);
+			console.log(requestBody.columns);
 
-      const data = await fetch('api/gen', {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-        headers: { "Content-Type": "application/json" },
-      });
-      const result: GenResponse = await data.json();
-      setSQLContentSilver(result.silverConfigQuery!);
-      setSQLContentGold(result.goldConfigQuery!);
-      console.log(result);
+			const data = await fetch('api/gen', {
+				method: "POST",
+				body: JSON.stringify(requestBody),
+				headers: { "Content-Type": "application/json" },
+			});
+			const result: GenResponse = await data.json();
+			setSQLContentSilver(result.silverConfigQuery!);
+			setSQLContentGold(result.goldConfigQuery!);
+			console.log(result);
 
-      toast({
-        title: "Success!",
-        description: `Submitted ${columnsConfig.length} column(s) configuration`,
-      })
-
-
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error || "Failed to process column configuration data",
-        variant: "destructive",
-      })
-      console.log(error);
-    } finally {
-      setIsSubmittingColumns(false);
-      setShowPostgresForm(prev => true);
-    }
-  }
+			toast({
+				title: "Success!",
+				description: `Submitted ${columnsConfig.length} column(s) configuration`,
+			})
 
 
-  const submitConfig = async (postgresConfig: DatabaseConfig) => {
-    try {
-      const data = await fetch("/api/etl_config_table/submit", {
-        method: "POST",
-        body: JSON.stringify({
-          poolCredentials: postgresConfig,
-          sqlContentGold: sqlContentGold,
-          sqlContentSilver: sqlContentSilver,
-        }),
-        headers: { "Content-Type": "application/json" },
-      })
-      const res: GenericResponse = await data.json();
-      console.log(res);
+		} catch (error: any) {
+			toast({
+				title: "Error",
+				description: error || "Failed to process column configuration data",
+				variant: "destructive",
+			})
+			console.log(error);
+		} finally {
+			setIsSubmittingColumns(false);
+			setShowPostgresForm(prev => true);
+		}
+	}
 
-      if (res.success) {
-        toast({
-          title: "Success",
-          description: res.message ? res.message : "",
-          variant: "default",
-        })
-      }
 
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to process PostgreSQL configuration",
-        variant: "destructive",
-      })
-      console.log("Error submitting ETL config:", error);
-    }
-  }
+	const submitConfig = async (postgresConfig: DatabaseConfig) => {
+		try {
+			const data = await fetch("/api/etl_config_table/submit", {
+				method: "POST",
+				body: JSON.stringify({
+					poolCredentials: postgresConfig,
+					sqlContentGold: sqlContentGold,
+					sqlContentSilver: sqlContentSilver,
+				}),
+				headers: { "Content-Type": "application/json" },
+			})
+			const res: GenericResponse = await data.json();
+			console.log(res);
 
-  return (
-    <PostgresContextProvider>
-      <main className="min-h-screen bg-background py-12 px-4">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">ETL Table Create</h1>
-            <p className="text-muted-foreground text-lg">Create Table for ETL Config</p>
-          </div>
+			if (res.success) {
+				toast({
+					title: "Success",
+					description: res.message ? res.message : "",
+					variant: "default",
+				})
+			}
 
-          <SchemaRegistry addColumn={addColumn} showColumnsConfig={showColumnsConfig} setShowColumnsConfig={setShowColumnsConfig} setTableConfig={setTableConfig} resetColumns={resetColumns} />
+		} catch (error: any) {
+			toast({
+				title: "Error",
+				description: error.message || "Failed to process PostgreSQL configuration",
+				variant: "destructive",
+			})
+			console.log("Error submitting ETL config:", error);
+		}
+	}
 
-          {showColumnsConfig && (
-            <ColumnBuilder
-              addColumn={addColumn}
-              columnsConfig={columnsConfig}
-              submitColumns={submitColumns}
-              isSubmittingColumns={isSubmittingColumns}
-              removeColumn={removeColumn}
-              updateColumn={updateColumn}
-            />)}
+	return (
+		<PostgresContextProvider>
+			<main className="min-h-screen bg-background py-12 px-4">
+				<div className="max-w-4xl mx-auto space-y-8">
+					<div className="text-center space-y-2">
+						<h1 className="text-4xl font-bold tracking-tight">ETL Table Create</h1>
+						<p className="text-muted-foreground text-lg">Create Table for ETL Config</p>
+					</div>
 
-          {showPostgresForm && (<PostgresConfig submitConfig={submitConfig} isTableNameRequired={false} />)}
-        </div>
-      </main>
-    </PostgresContextProvider>
-  )
+					<SchemaRegistry addColumn={addColumn} showColumnsConfig={showColumnsConfig} setShowColumnsConfig={setShowColumnsConfig} setTableConfig={setTableConfig} resetColumns={resetColumns} />
+
+					{showColumnsConfig && (
+						<ColumnBuilder
+							addColumn={addColumn}
+							columnsConfig={columnsConfig}
+							submitColumns={submitColumns}
+							isSubmittingColumns={isSubmittingColumns}
+							removeColumn={removeColumn}
+							updateColumn={updateColumn}
+						/>)}
+
+					{showPostgresForm && (<PostgresConfig submitConfig={submitConfig} isTableNameRequired={false} />)}
+				</div>
+			</main>
+		</PostgresContextProvider>
+	)
 }

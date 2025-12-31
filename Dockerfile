@@ -2,6 +2,21 @@
 FROM node:24.12.0-alpine AS base
 WORKDIR /app
 
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    apt-transport-https \
+    software-properties-common
+
+# Install PowerShell
+RUN wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb \
+    && apt-get update \
+    && apt-get install -y powershell
+
+# Verify
+RUN pwsh --version
+
 # ---- Dependencies ----
 FROM base AS deps
 COPY package.json package-lock.json* ./

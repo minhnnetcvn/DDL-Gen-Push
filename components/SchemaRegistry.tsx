@@ -14,182 +14,182 @@ import { AggregateMethod } from "@/types/ColumnRowData";
 import { TableConfig } from "@/types/TableConfig";
 
 interface SchemaRegistryProp {
-    addColumn: (aColumnName: string, aType: string, aAggregateMethod : AggregateMethod) => void;
-    resetColumns: () => void;
-    showColumnsConfig: boolean;
-    setShowColumnsConfig: Dispatch<SetStateAction<boolean>>;
-    setTableConfig: Dispatch<SetStateAction<TableConfig>>;
+	addColumn: (aColumnName: string, aType: string, aAggregateMethod: AggregateMethod) => void;
+	resetColumns: () => void;
+	showColumnsConfig: boolean;
+	setShowColumnsConfig: Dispatch<SetStateAction<boolean>>;
+	setTableConfig: Dispatch<SetStateAction<TableConfig>>;
 }
 
 export function SchemaRegistry(props: SchemaRegistryProp) {
-    const [formData, setFormData] = useState({
-        schemaRegistryUrl: "10.8.75.82:8081",
-        tableName: "",
-        option: "",
-        createdBy: ""
-    })
+	const [formData, setFormData] = useState({
+		schemaRegistryUrl: "10.8.75.82:8081",
+		tableName: "",
+		option: "",
+		createdBy: ""
+	})
 
-    const [errors, setErrors] = useState({
-    schemaRegistryUrl: "",
-    tableName: "",
-    })
+	const [errors, setErrors] = useState({
+		schemaRegistryUrl: "",
+		tableName: "",
+	})
 
-    const [isSubmitting, setIsSubmitting] = useState(false)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-    
-        if (errors[name as keyof typeof errors]) {
-          setErrors((prev) => ({ ...prev, [name]: "" }))
-        }
-    }
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target
+		setFormData((prev) => ({ ...prev, [name]: value }))
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        const error = validateField(name, value)
-        setErrors((prev) => ({ ...prev, [name]: error }))
-    }
+		if (errors[name as keyof typeof errors]) {
+			setErrors((prev) => ({ ...prev, [name]: "" }))
+		}
+	}
 
-    const handleSchemaSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+	const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+		const { name, value } = e.target
+		const error = validateField(name, value)
+		setErrors((prev) => ({ ...prev, [name]: error }))
+	}
 
-        const newErrors = {
-        schemaRegistryUrl: validateField("schemaRegistryUrl", formData.schemaRegistryUrl),
-        tableName: validateField("tableName", formData.tableName),
-        }
+	const handleSchemaSubmit = async (e: React.FormEvent) => {
+		e.preventDefault()
 
-        setErrors(newErrors)
+		const newErrors = {
+			schemaRegistryUrl: validateField("schemaRegistryUrl", formData.schemaRegistryUrl),
+			tableName: validateField("tableName", formData.tableName),
+		}
 
-        if (Object.values(newErrors).some((error) => error !== "")) {
-          toast({
-              title: "Validation Error",
-              description: "Please fix the errors before submitting",
-              variant: "destructive",
-          });
+		setErrors(newErrors)
 
-          return ;
-        }
+		if (Object.values(newErrors).some((error) => error !== "")) {
+			toast({
+				title: "Validation Error",
+				description: "Please fix the errors before submitting",
+				variant: "destructive",
+			});
 
-        setIsSubmitting(true)
+			return;
+		}
 
-        try {
-          const data = await fetch("/api/schema", {
-            method: "POST",
-            body: JSON.stringify(formData),
-            headers: { "Content-Type": "application/json" },
-          })
+		setIsSubmitting(true)
 
-          props.resetColumns();
+		try {
+			const data = await fetch("/api/schema", {
+				method: "POST",
+				body: JSON.stringify(formData),
+				headers: { "Content-Type": "application/json" },
+			})
 
-          const schemaResponse : SchemaResponse = await data.json();
-          console.log(schemaResponse);
-            
-          if (schemaResponse.schema) {
-            const schema : SchemaMap = schemaResponse.schema;
+			props.resetColumns();
 
-            Object.entries(schema).forEach(([columnName, columnType], idx) => {
-                props.addColumn(columnName, columnType, "LAST_VALUE"); // Add Row for each schema entry
-            });
+			const schemaResponse: SchemaResponse = await data.json();
+			console.log(schemaResponse);
 
-            props.setShowColumnsConfig(true);
+			if (schemaResponse.schema) {
+				const schema: SchemaMap = schemaResponse.schema;
 
-            toast({
-              title: "Success",
-              description: "Schema registry data processed!",
-          })
-          }
-          else {
-            alert("Error 204. No schema data received from server.");
+				Object.entries(schema).forEach(([columnName, columnType], idx) => {
+					props.addColumn(columnName, columnType, "LAST_VALUE"); // Add Row for each schema entry
+				});
 
-            toast({
-              title: "Error",
-              description: "No schema matches",
-              variant: "destructive",
-            })
-          }
+				props.setShowColumnsConfig(true);
 
-          schemaResponse.registryUrl && setFormData((prev) => ({...prev, registryUrl: schemaResponse.registryUrl}));
-          schemaResponse.tableName && setFormData((prev) => ({...prev, tableName: schemaResponse.tableName}));
-          props.setTableConfig(prev => {
-            return {
-              ...prev,
-              tableName: schemaResponse.tableName
-            }
-          })
-        } catch (error: any) {
-          toast({
-              title: "Error",
-              description: error || "Failed to process schema registry data",
-              variant: "destructive",
-          })
-        } finally {
-          setIsSubmitting(false)
-        }
-    }
+				toast({
+					title: "Success",
+					description: "Schema registry data processed!",
+				})
+			}
+			else {
+				alert("Error 204. No schema data received from server.");
+
+				toast({
+					title: "Error",
+					description: "No schema matches",
+					variant: "destructive",
+				})
+			}
+
+			schemaResponse.registryUrl && setFormData((prev) => ({ ...prev, registryUrl: schemaResponse.registryUrl }));
+			schemaResponse.tableName && setFormData((prev) => ({ ...prev, tableName: schemaResponse.tableName }));
+			props.setTableConfig(prev => {
+				return {
+					...prev,
+					tableName: schemaResponse.tableName
+				}
+			})
+		} catch (error: any) {
+			toast({
+				title: "Error",
+				description: error || "Failed to process schema registry data",
+				variant: "destructive",
+			})
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
 
 
-    return (
-        <Card>
-          <CardHeader>
-            <CardTitle>Get Schema Registry</CardTitle>
-            <CardDescription>Configure schema registry with URL, table name, and option validation</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSchemaSubmit} onReset={() => props.setShowColumnsConfig(prev => prev = false)} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="schemaRegistryUrl">Schema Registry URL</Label>
-                <Input
-                  id="schemaRegistryUrl"
-                  name="schemaRegistryUrl"
-                  type="text"
-                  placeholder="localhost:8081 or 192.168.1.1:9092"
-                  value={formData.schemaRegistryUrl}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.schemaRegistryUrl ? "border-destructive" : ""}
-                  disabled={props.showColumnsConfig}
-                />
-                {errors.schemaRegistryUrl && <p className="text-sm text-destructive">{errors.schemaRegistryUrl}</p>}
-              </div>
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Get Schema Registry</CardTitle>
+				<CardDescription>Configure schema registry with URL, table name, and option validation</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<form onSubmit={handleSchemaSubmit} onReset={() => props.setShowColumnsConfig(prev => prev = false)} className="space-y-6">
+					<div className="space-y-2">
+						<Label htmlFor="schemaRegistryUrl">Schema Registry URL</Label>
+						<Input
+							id="schemaRegistryUrl"
+							name="schemaRegistryUrl"
+							type="text"
+							placeholder="localhost:8081 or 192.168.1.1:9092"
+							value={formData.schemaRegistryUrl}
+							onChange={handleChange}
+							onBlur={handleBlur}
+							className={errors.schemaRegistryUrl ? "border-destructive" : ""}
+							disabled={props.showColumnsConfig}
+						/>
+						{errors.schemaRegistryUrl && <p className="text-sm text-destructive">{errors.schemaRegistryUrl}</p>}
+					</div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tableName">Table Name</Label>
-                <Input
-                  id="tableName"
-                  name="tableName"
-                  type="text"
-                  placeholder="users_table or my_data_table"
-                  value={formData.tableName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.tableName ? "border-destructive" : ""}
-                  disabled={props.showColumnsConfig}
-                />
-                {errors.tableName && <p className="text-sm text-destructive">{errors.tableName}</p>}
-              </div>
+					<div className="space-y-2">
+						<Label htmlFor="tableName">Table Name</Label>
+						<Input
+							id="tableName"
+							name="tableName"
+							type="text"
+							placeholder="users_table or my_data_table"
+							value={formData.tableName}
+							onChange={handleChange}
+							onBlur={handleBlur}
+							className={errors.tableName ? "border-destructive" : ""}
+							disabled={props.showColumnsConfig}
+						/>
+						{errors.tableName && <p className="text-sm text-destructive">{errors.tableName}</p>}
+					</div>
 
-              <div className="space-y-3">
-                <Label>Option</Label>
-                <RadioGroup value={formData.option} disabled={props.showColumnsConfig}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="" id="both" disabled={props.showColumnsConfig} />
-                    <Label htmlFor="both" className="font-normal cursor-pointer">
-                      Both
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
+					<div className="space-y-3">
+						<Label>Option</Label>
+						<RadioGroup value={formData.option} disabled={props.showColumnsConfig}>
+							<div className="flex items-center space-x-2">
+								<RadioGroupItem value="" id="both" disabled={props.showColumnsConfig} />
+								<Label htmlFor="both" className="font-normal cursor-pointer">
+									Both
+								</Label>
+							</div>
+						</RadioGroup>
+					</div>
 
-              {!props.showColumnsConfig? (<Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </Button>): 
-              (<Button type="reset" className="w-full">
-                Edit
-              </Button>)
-              }
-            </form>
-          </CardContent>
-        </Card>
-    )
+					{!props.showColumnsConfig ? (<Button type="submit" className="w-full" disabled={isSubmitting}>
+						{isSubmitting ? "Submitting..." : "Submit"}
+					</Button>) :
+						(<Button type="reset" className="w-full">
+							Edit
+						</Button>)
+					}
+				</form>
+			</CardContent>
+		</Card>
+	)
 }
