@@ -63,6 +63,7 @@ export default function PostgresConfig(props: PostgresFormProps) {
 								value={postgresData.host}
 								onChange={(e) => setPostgresData({ ...postgresData, host: e.target.value })}
 								required
+								disabled={props.isDbConfigured}
 							/>
 						</div>
 						<div className="space-y-2">
@@ -73,6 +74,7 @@ export default function PostgresConfig(props: PostgresFormProps) {
 								value={postgresData.port}
 								onChange={(e) => setPostgresData({ ...postgresData, port: e.target.value })}
 								required
+								disabled={props.isDbConfigured}
 							/>
 						</div>
 						<div className="space-y-2 col-span-full">
