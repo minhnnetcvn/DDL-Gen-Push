@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/useToast"
 import { type ETLConfig } from "@/components/ETLConfigTable"
 import { Database } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
-import { v4 as uuidv4 } from "uuid"
 import { useUsername } from "@/context/usernameContext"
 import PostgresConfig from "@/components/PostgresConfig"
 import { DatabaseConfig } from "@/types/DatabaseConfig"
@@ -75,7 +74,7 @@ export default function DBExplorerPage() {
 			Object.entries(queryResults.filter((row) => row.id === rowId)[0])
 			.map(([key, value]) => {
 				return {
-					id: uuidv4(),
+					id: crypto.randomUUID(),
 					key: key,
 					value: String(value),
 					dataType: value === "gold" || value === "silver" || value === "true" || value === "false" ? "select" : key.toLowerCase().includes("ddl") ? "textarea" : "text",

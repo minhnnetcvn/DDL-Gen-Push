@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { v4 as uuidv4 } from "uuid"
 import { AggregateMethod, ColumnRowData } from "@/types/ColumnRowData"
 
 export function useColumnsConfig() {
@@ -13,7 +12,7 @@ export function useColumnsConfig() {
     setColumnsConfig(prev => [
       ...prev,
       {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         columnName,
         type,
         aggregateMethod,

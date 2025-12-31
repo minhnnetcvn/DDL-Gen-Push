@@ -4,7 +4,6 @@ import type React from "react"
 import { useState } from "react"
 import { useToast } from "@/hooks/useToast"
 import { AggregateMethod, ColumnRowData } from "@/types/ColumnRowData"
-import { v4 as uuidv4 } from 'uuid';
 import { useUsername } from "@/context/usernameContext"
 import { GenRequest } from "@/types/GenRequest"
 import { GenResponse } from "@/types/GenResponse"
