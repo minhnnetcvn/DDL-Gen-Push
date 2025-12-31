@@ -2,19 +2,13 @@
 FROM node:24.12.0-alpine AS base
 WORKDIR /app
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    wget \
-    apt-transport-https \
-    software-properties-common
+# Enable community repo + install PowerShell
+RUN apk update && apk add --no-cache \
+    powershell \
+    icu-libs \
+    bash
 
-# Install PowerShell
-RUN wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
-    && dpkg -i packages-microsoft-prod.deb \
-    && apt-get update \
-    && apt-get install -y powershell
-
-# Verify
+# Verify PowerShell
 RUN pwsh --version
 
 # ---- Dependencies ----
@@ -30,6 +24,8 @@ RUN npm run build
 
 # ---- Runtime ----
 FROM base AS runner
+WORKDIR /app
+
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
@@ -38,6 +34,7 @@ COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/scripts ./scripts
 
 EXPOSE 3000
 CMD ["npm", "start"]

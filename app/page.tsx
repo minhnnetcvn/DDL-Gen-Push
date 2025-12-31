@@ -23,6 +23,7 @@ export default function HomePage() {
 	const [sqlContentGold, setSQLContentGold] = useState("");
 	const [sqlContentSilver, setSQLContentSilver] = useState("");
 
+
 	const [showColumnsConfig, setShowColumnsConfig] = useState(false);
 	const [showPostgresForm, setShowPostgresForm] = useState(false);
 

@@ -38,20 +38,20 @@ export function generateColumnSQL(columns: ColumnRowData[]): ColumnsClassificati
 
 export function goldDDL(params: DDLParams): SQLQuery {
 	const DDL = `CREATE TABLE IF NOT EXISTS ice.gold.${params.tableType == "dim" ? "dim_" : "fact_"}${params.tableName} (
-        ${params.dimensionDefinitions},
+        ${params.dimensionDefinitions != ""? `${params.dimensionDefinitions},`: ""}
 
-        ${params.aggregateDefinitions},
+        ${params.aggregateDefinitions != ""? `${params.aggregateDefinitions},`: ""}
 
 		${params.tableType == "dim" ? `
-			scd_valid_from TIMESTAMP,
-			scd_valid_to TIMESTAMP,
-			is_active BOOLEAN,
-			processing_timestamp TIMESTAMP
+                    scd_valid_from TIMESTAMP,
+                    scd_valid_to TIMESTAMP,
+                    is_active BOOLEAN,
+                    processing_timestamp TIMESTAMP
           `: `
-			year  STRING,
-			month STRING,
-			day   STRING,
-			hour  STRING
+                    year  STRING,
+                    month STRING,
+                    day   STRING,
+                    hour  STRING
 		`}
         )
         USING iceberg
@@ -70,37 +70,37 @@ export function buildAggregateColumnName(agg: string, columnName: string): strin
 
 export function transformSQLContent(params: TransformParams): SQLQuery {
 	const transformSqlTemplate = `SELECT 
-            ${params.dimensionColumns},
+            ${params.dimensionColumns != ""? `${params.dimensionColumns},`: ""}
 
             
-            ${params.aggregateColumns},
+            ${params.aggregateColumns != ""? `${params.aggregateColumns},`: ""}
             
 
             ${params.tableType == "fact" ? `
-              year,
-              month,
-              day,
-              hour
+                    year,
+                    month,
+                    day,
+                    hour
             `: `
-              NULL scd_valid_from,
-              NULL scd_valid_to,
-              1 is_active,
-              NULL processing_timestamp
+                    NULL scd_valid_from,
+                    NULL scd_valid_to,
+                    1 is_active,
+                    NULL processing_timestamp
             `}
             
           FROM ice.silver.${params.tableNameLower}
           ${params.tableType == "fact" ? `WHERE year = ''\${year}'' 
-				AND month = ''\${month}'' 
-				AND day = ''\${day}''
-				AND hour = ''\${hour}''
+                    AND month = ''\${month}'' 
+                    AND day = ''\${day}''
+                    AND hour = ''\${hour}''
           `: ''}
           GROUP BY 
               ${params.dimensionColumns}
               ${params.tableType == "fact"? `,
-				year,
-              month,
-              day,
-              hour`: ""}
+                    year,
+                    month,
+                    day,
+                    hour`: ""}
       `;
 	return transformSqlTemplate.trim();
 }
@@ -155,7 +155,7 @@ export function goldConfig(params: ConfigParams): SQLQuery {
 export function silverDDL(params: DDLParams): SQLQuery {
 	const DDL = `CREATE TABLE IF NOT EXISTS silver.${params.tableName} (
             
-            ${params.allColumnsDefinitions},
+            ${params.allColumnsDefinitions != ""? `${params.allColumnsDefinitions},` : ""}
 
             offset BIGINT,
             year STRING,

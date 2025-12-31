@@ -1,5 +1,10 @@
 export interface SchemaResponse {
     tableName: string;
-    schema: Record<string, string>;
+    schemaMap: SchemaConfig[];
     registryUrl: string;
+}
+
+export interface SchemaConfig {
+    name: string;
+    type: string;
 }

@@ -89,15 +89,48 @@ function Get-SchemaFromRegistry {
   }
 }
 
+# function Get-SchemaColumnTypeMap {
+#   param([object]$Schema)
+
+#   $map = @{}
+#   foreach ($field in $Schema.fields) {
+#     $map[$field.name] = Convert-AvroTypeToSparkType -TypeNode $field.type
+#   }
+#   return $map
+# }
+
 function Get-SchemaColumnTypeMap {
   param([object]$Schema)
 
-  $map = @{}
+  $columns = @()
+
   foreach ($field in $Schema.fields) {
-    $map[$field.name] = Convert-AvroTypeToSparkType -TypeNode $field.type
+    $columns += [pscustomobject]@{
+      name = $field.name
+      type = Convert-AvroTypeToSparkType -TypeNode $field.type
+    }
   }
-  return $map
+
+  return $columns
 }
+
+# function Get-SchemaColumnTypeMap {
+#   param([object]$Schema)
+
+#   $map = [ordered]@{}
+#   $index = 0
+
+#   foreach ($field in $Schema.fields) {
+#     $map[$field.name] = @{
+#       Order = $index
+#       Type  = Convert-AvroTypeToSparkType -TypeNode $field.type
+#     }
+#     $index++
+#   }
+
+#   return $map
+# }
+
 
 # ============================================================================
 # Main
@@ -122,7 +155,7 @@ $schemaMap = Get-SchemaColumnTypeMap -Schema $schema
 # Compose final JSON object
 $result = [PSCustomObject]@{
   tableName = $TableName
-  schema         = $schemaMap           # map of column → Spark type
+  schemaMap = $schemaMap           # map of column → Spark type
   registryUrl    = $registryUrl
 }
 

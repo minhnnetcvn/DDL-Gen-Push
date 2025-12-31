@@ -1,18 +1,23 @@
+import scriptPath from "@/app/helper/pathResolver";
 import { spawn } from "child_process"
 import { NextResponse } from "next/server"
 import { env } from "process";
+import os from "os";
 
 export async function POST(request: Request) {
   try {
     const data = await request.json()
 
+    const isWindows = os.platform() === "win32";
+
     const result = await new Promise<{ success: boolean; output?: string; error?: string }>((resolve, reject) => {
       // Spawn PowerShell process
-      const ps = spawn(env.NODE_ENV == "production"? "pwsh": "powershell.exe", [
+      console.log(scriptPath);
+      const ps = spawn(isWindows? "powershell.exe": "pwsh", [
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "..\\etl-table-config-crud\\scripts\\generate-etl-configs.ps1",
+        `${scriptPath}`,
         "-registryUrl",
         data.schemaRegistryUrl,
         "-TableName",
@@ -47,6 +52,7 @@ export async function POST(request: Request) {
     })
 
     if (result.success) {
+      console.log(JSON.parse(result.output!));
       return NextResponse.json(JSON.parse(result.output || "{}"))
     } else {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
