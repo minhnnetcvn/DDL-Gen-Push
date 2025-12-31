@@ -11,16 +11,16 @@ export interface ConfigParams {
 }
 
 export interface DDLParams {
-    dimensionDefinitions? : string;
-    aggregateDefinitions? : string;
+    dimensionColumnTransform? : string;
+    goldColumnTransform? : string;
     allColumnsDefinitions? : string;
     tableName: string;
     tableType: TableTypes
 }
 
 export interface TransformParams {
-    dimensionColumns: string;
-    aggregateColumns: string;
+    dimensionColumnTransform: string;
+    goldColumnTransform: string;
     allColumns?: string;
     tableNameLower: string
     tableType: TableTypes

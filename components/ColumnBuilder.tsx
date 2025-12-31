@@ -54,7 +54,7 @@ export default function ColumnBuilder(props : ColumnBuilderProps) {
     return (
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CardHeader>
-                <CardTitle>Column Configuration</CardTitle>
+                <CardTitle>Step 2: Column Configuration</CardTitle>
                 <CardDescription>Define columns with their names, data types, and aggregate methods</CardDescription>
             </CardHeader>
             <CardContent>
@@ -108,7 +108,7 @@ export default function ColumnBuilder(props : ColumnBuilderProps) {
 
                     <div className="flex justify-end">
                     <Button type="submit" disabled={props.isSubmittingColumns}>
-                        {props.isSubmittingColumns ? "Submitting..." : "Submit Configuration"}
+                        {props.isSubmittingColumns ? "Submitting..." : "Save Configuration"}
                     </Button>
                     </div>
                 </form>

@@ -4,43 +4,35 @@ import { ColumnsClassificationType } from "@/types/ColumnsClassificationType";
 import { ColumnRowData } from "@/types/ColumnRowData";
 import { SQLQuery } from "@/types/PrimitiveTypes";
 
-function buildAggregateSelect(agg: string, columnName: string): string {
+function buildAggregateTransform(agg: string, columnName: string): string {
 	return `${agg}(${columnName}) AS ${columnName}`
 }
 
 export function generateColumnSQL(columns: ColumnRowData[]): ColumnsClassificationType {
-	const dimensionDefinitions: string[] = [];
-	const aggregatesDefinitions: string[] = [];
-	const aggregateColumns: string[] = [];
-	const dimensionColumns: string[] = [];
+	const goldColumnTransform: string[] = [];
+	const dimensionColumnTransform: string[] = [];
+    const allColumnsDefinitions: string[] = [];
 
 
 	for (const col of columns) {
 		if (col.aggregateMethod === "NONE") {
-			dimensionDefinitions.push(`  ${col.columnName} ${col.type}`);
-			dimensionColumns.push(col.columnName);
-		} else {
-			aggregateColumns.push(buildAggregateSelect(col.aggregateMethod, col.columnName));
+			dimensionColumnTransform.push(col.columnName);
+            goldColumnTransform.push(col.columnName)
+		} else goldColumnTransform.push(buildAggregateTransform(col.aggregateMethod, col.columnName));
 
-			aggregatesDefinitions.push(
-				`  ${col.columnName} ${col.type}`
-			)
-		}
+        allColumnsDefinitions.push(`${col.columnName} ${col.type}`)
 	}
 
 	return {
-		dimensionColumns: dimensionColumns.join(',\n        '),
-		aggregateColumns: aggregateColumns.join(',\n        '),
-		dimensionDefinitions: dimensionDefinitions.join(',\n        '),
-		aggregatesDefinitions: aggregatesDefinitions.join(',\n        '),
+		goldColumnTransform: goldColumnTransform.join(',\n      '),
+        dimensionColumnTransform: dimensionColumnTransform.join(',\n      '),
+        allColumnsDefinitions: allColumnsDefinitions.join(',\n      '),
 	}
 }
 
 export function goldDDL(params: DDLParams): SQLQuery {
 	const DDL = `CREATE TABLE IF NOT EXISTS ice.gold.${params.tableType == "dim" ? "dim_" : "fact_"}${params.tableName} (
-        ${params.dimensionDefinitions != ""? `${params.dimensionDefinitions},`: ""}
-
-        ${params.aggregateDefinitions != ""? `${params.aggregateDefinitions},`: ""}
+        ${params.allColumnsDefinitions != ""? `${params.allColumnsDefinitions},`: ""}
 
 		${params.tableType == "dim" ? `
                     scd_valid_from TIMESTAMP,
@@ -70,10 +62,7 @@ export function buildAggregateColumnName(agg: string, columnName: string): strin
 
 export function transformSQLContent(params: TransformParams): SQLQuery {
 	const transformSqlTemplate = `SELECT 
-            ${params.dimensionColumns != ""? `${params.dimensionColumns},`: ""}
-
-            
-            ${params.aggregateColumns != ""? `${params.aggregateColumns},`: ""}
+            ${params.goldColumnTransform != ""? `${params.goldColumnTransform},`: ""}
             
 
             ${params.tableType == "fact" ? `
@@ -82,10 +71,10 @@ export function transformSQLContent(params: TransformParams): SQLQuery {
                     day,
                     hour
             `: `
-                    NULL scd_valid_from,
-                    NULL scd_valid_to,
-                    1 is_active,
-                    NULL processing_timestamp
+                NULL scd_valid_from,
+                NULL scd_valid_to,
+                1 is_active,
+                NULL processing_timestamp
             `}
             
           FROM ice.silver.${params.tableNameLower}
@@ -95,7 +84,7 @@ export function transformSQLContent(params: TransformParams): SQLQuery {
                     AND hour = ''\${hour}''
           `: ''}
           GROUP BY 
-              ${params.dimensionColumns}
+              ${params.dimensionColumnTransform}
               ${params.tableType == "fact"? `,
                     year,
                     month,
