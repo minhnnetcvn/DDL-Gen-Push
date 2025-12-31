@@ -1,6 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ColumnRowData } from "@/types/ColumnRowData"
 import { Trash2 } from "lucide-react"
@@ -64,6 +65,13 @@ export function ColumnRow({ row, onUpdate, onRemove, canRemove }: ColumnRowProps
                         <SelectItem value="NONE">None</SelectItem>
                     </SelectContent>
                 </Select>
+            </td>
+            <td className="p-4">
+                <Checkbox
+                    id={`primary-key-${row.id}`}
+                    checked={row.isPrimaryKey}
+                    onCheckedChange={(checked) => onUpdate(row.id, "isPrimaryKey", checked.length as boolean)}
+                />
             </td>
             <td className="p-4">
                 <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(row.id)} disabled={!canRemove}>
