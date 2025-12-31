@@ -52,6 +52,7 @@ export async function POST(request: Request) {
     })
 
     if (result.success) {
+      console.log(JSON.parse(result.output!));
       return NextResponse.json(JSON.parse(result.output || "{}"))
     } else {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })

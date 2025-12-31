@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import validateField from "@/app/helper/validateField";
 
 import { SchemaMap } from "@/types/PrimitiveTypes";
-import { SchemaResponse } from "@/types/SchemaResponse";
+import { SchemaConfig, SchemaResponse } from "@/types/SchemaResponse";
 import { useState, Dispatch, SetStateAction } from "react";
 import { AggregateMethod } from "@/types/ColumnRowData";
 import { TableConfig } from "@/types/TableConfig";
@@ -85,11 +85,11 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 			const schemaResponse: SchemaResponse = await data.json();
 			console.log(schemaResponse);
 
-			if (schemaResponse.schema) {
-				const schema: SchemaMap = schemaResponse.schema;
+			if (schemaResponse.schemaMap) {
+				const schemaConfig: SchemaConfig[] = schemaResponse.schemaMap;
 
-				Object.entries(schema).forEach(([columnName, columnType], idx) => {
-					props.addColumn(columnName, columnType, "LAST_VALUE"); // Add Row for each schema entry
+				schemaConfig.forEach((config, idx) => {
+					props.addColumn(config.name, config.type, "LAST_VALUE"); // Add Row for each schema entry
 				});
 
 				props.setShowColumnsConfig(true);
