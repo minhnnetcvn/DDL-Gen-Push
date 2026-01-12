@@ -133,7 +133,10 @@ export function goldConfig(params: ConfigParams): SQLQuery {
             '${params.createdBy}'
         ) ON CONFLICT (layer, source_table_name) DO UPDATE SET
             target_table_ddl = EXCLUDED.target_table_ddl,
+            target_table_full_name = EXCLUDED.target_table_full_name,
+            target_table_name = EXCLUDED.target_table_name,
             target_partition_spec = EXCLUDED.target_partition_spec,
+            primary_key_columns = EXCLUDED.primary_key_columns,
             transform_sql = EXCLUDED.transform_sql,
             updated_at = CURRENT_TIMESTAMP,
             updated_by = '${params.createdBy}';
@@ -215,6 +218,8 @@ export function silverConfig(params: ConfigParams): SQLQuery {
             '${params.createdBy}'
         ) ON CONFLICT (layer, source_table_name) DO UPDATE SET
             target_table_ddl = EXCLUDED.target_table_ddl,
+            target_table_full_name = EXCLUDED.target_table_full_name,
+            target_table_name = EXCLUDED.target_table_name,
             target_partition_spec = EXCLUDED.target_partition_spec,
             primary_key_columns = EXCLUDED.primary_key_columns,
             updated_at = CURRENT_TIMESTAMP,
