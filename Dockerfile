@@ -29,6 +29,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+# ENV DEFAULT_IP_ADDRESS="10.8.75.82"
 
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public

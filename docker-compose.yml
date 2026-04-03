@@ -4,4 +4,6 @@ services:
     image: minhnnetc/etl-table-config-crud:latest
     ports:
       - "3000:3000"
+    environment:
+      - "DEFAULT_IP_ADDRESS=10.8.75.82"
     restart: unless-stopped

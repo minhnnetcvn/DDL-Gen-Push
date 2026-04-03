@@ -10,15 +10,15 @@ interface DatabaseConfigHookType{
 const PostgresContext = createContext<DatabaseConfigHookType| null>(null);
 
 
-export function PostgresContextProvider({children}: {children: React.ReactNode}) {
-    const [databaseConfig, setDatabaseConfig] = useState<DatabaseConfig>({
+export function PostgresContextProvider({children, defaultHost}: {children: React.ReactNode, defaultHost: string}) {
+    const [databaseConfig, setDatabaseConfig] = useState<DatabaseConfig>(() => ({
         databaseName: "postgres",
-        host: "10.8.75.82",
+        host: defaultHost || "localhost",
         password: "postgres",
         port: "5432",
         user: "postgres",
         tableName: "etl_table_config",
-    });
+    }));
 
     useEffect(() => {
         console.log(databaseConfig);
