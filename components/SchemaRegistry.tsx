@@ -122,9 +122,10 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 				}
 			})
 		} catch (error: any) {
+			const errorMessage = error?.message || String(error) || "Failed to process schema registry data";
 			toast({
 				title: "Error",
-				description: error || "Failed to process schema registry data",
+				description: errorMessage,
 				variant: "destructive",
 			})
 		} finally {

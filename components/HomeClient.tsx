@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useToast } from "@/hooks/useToast"
 import { useUsername } from "@/context/usernameContext"
 import { GenRequest } from "@/types/GenRequest"
 import { GenResponse } from "@/types/GenResponse"
@@ -17,12 +16,11 @@ import { PostgresContextProvider } from "@/context/postgresContext"
 import { TableConfig, TableTypes } from "@/types/TableConfig"
 
 interface Props {
-  defaultIp: string
+  defaultKafkaIp: string
+  defaultConnectionString: DatabaseConfig
 }
 
-export default function HomePage({ defaultIp }: Props) {
-	const { toast } = useToast()
-
+export default function HomePage({ defaultKafkaIp, defaultConnectionString }: Props) {
 	const [sqlContentGold, setSQLContentGold] = useState("");
 	const [sqlContentSilver, setSQLContentSilver] = useState("");
 
@@ -46,11 +44,7 @@ export default function HomePage({ defaultIp }: Props) {
 		const { isInvalidExists, invalidConfigs } = validateColumnsConfig(columnsConfig)
 
 		if (isInvalidExists) {
-			toast({
-				title: "Validation Error",
-				description: `Please fill in all fields for rows ${invalidConfigs?.join(', ')}`,
-				variant: "destructive",
-			})
+			alert(`Validation Error: Please fill in all fields for rows ${invalidConfigs?.join(', ')}`);
 			setIsSubmittingColumns(false)
 			return;
 		}
@@ -75,18 +69,12 @@ export default function HomePage({ defaultIp }: Props) {
 			setSQLContentGold(result.goldConfigQuery!);
 			console.log(result);
 
-			toast({
-				title: "Success!",
-				description: `Submitted ${columnsConfig.length} column(s) configuration`,
-			})
+			alert(`Success! Submitted ${columnsConfig.length} column(s) configuration`);
 
 
 		} catch (error: any) {
-			toast({
-				title: "Error",
-				description: error || "Failed to process column configuration data",
-				variant: "destructive",
-			})
+			const errorMessage = error?.message || String(error) || "Failed to process column configuration data";
+			alert(`Error: ${errorMessage}`);
 			console.log(error);
 		} finally {
 			setIsSubmittingColumns(false);
@@ -110,25 +98,17 @@ export default function HomePage({ defaultIp }: Props) {
 			console.log(res);
 
 			if (res.success) {
-				toast({
-					title: "Success",
-					description: res.message ? res.message : "",
-					variant: "default",
-				})
+				alert(`Success: ${res.message}`);
 			}
 
 		} catch (error: any) {
-			toast({
-				title: "Error",
-				description: error.message || "Failed to process PostgreSQL configuration",
-				variant: "destructive",
-			})
+			alert(`Error: ${error.message || "Failed to process PostgreSQL configuration"}`);
 			console.log("Error submitting ETL config:", error);
 		}
 	}
 
 	return (
-		<PostgresContextProvider defaultHost={defaultIp}>
+		<PostgresContextProvider defaultConnectionString={defaultConnectionString}>
 			<main className="min-h-screen bg-background py-12 px-4">
 				<div className="max-w-4xl mx-auto space-y-8">
 					<div className="text-center space-y-2">
@@ -136,7 +116,14 @@ export default function HomePage({ defaultIp }: Props) {
 						<p className="text-muted-foreground text-lg">Create Table for ETL Config</p>
 					</div>
 
-					<SchemaRegistry addColumn={addColumn} showColumnsConfig={showColumnsConfig} setShowColumnsConfig={setShowColumnsConfig} setTableConfig={setTableConfig} resetColumns={resetColumns} defaultIp={defaultIp} />
+					<SchemaRegistry
+						addColumn={addColumn}
+						showColumnsConfig={showColumnsConfig}
+						setShowColumnsConfig={setShowColumnsConfig}
+						setTableConfig={setTableConfig}
+						resetColumns={resetColumns}
+						defaultIp={defaultKafkaIp}
+					/>
 
 					{showColumnsConfig && (
 						<ColumnBuilder

@@ -5,6 +5,9 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 import type { ETLConfigRow } from "@/types/ETLConfigRow";
 
+/** Must match the number of <TableHead> columns in this table */
+const ETL_CONFIG_TABLE_COLUMN_COUNT = 31
+
 interface ETLConfigTableProps {
 	data: ETLConfigRow[]
 	onIdClick?: (id: number) => void
@@ -69,13 +72,13 @@ export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowCl
 					<TableBody>
 						{data.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={7} className="h-24 text-center">
+								<TableCell colSpan={ETL_CONFIG_TABLE_COLUMN_COUNT} className="h-24 text-center text-muted-foreground">
 									No results found.
 								</TableCell>
 							</TableRow>
 						) : (
 							data.map((row) => (
-								<TableRow className="cursor-pointer" key={row.id} onClick={(e) => onRowClick ? onRowClick(row.id) : ""}>
+								<TableRow className="cursor-pointer" key={row.id} onClick={() => onRowClick?.(row.id)}>
 									<TableCell className="font-medium cursor-pointer hover:line-through" onClick={(e) => {
 										e.stopPropagation();
 										onIdClick?.(row.id);

@@ -10,18 +10,20 @@ interface DatabaseConfigHookType{
 const PostgresContext = createContext<DatabaseConfigHookType| null>(null);
 
 
-export function PostgresContextProvider({children, defaultHost}: {children: React.ReactNode, defaultHost: string}) {
+export function PostgresContextProvider({children, defaultConnectionString}: {children: React.ReactNode, defaultConnectionString: DatabaseConfig}) {
     const [databaseConfig, setDatabaseConfig] = useState<DatabaseConfig>(() => ({
         databaseName: "postgres",
-        host: defaultHost || "localhost",
-        password: "postgres",
-        port: "5432",
-        user: "postgres",
-        tableName: "etl_table_config",
+        host: defaultConnectionString.host || "localhost",
+        password: defaultConnectionString.password || "postgres",
+        port: defaultConnectionString.port || "5432",
+        user: defaultConnectionString.user || "postgres",
+        tableName: defaultConnectionString.tableName || "etl_table_config",
     }));
 
     useEffect(() => {
-        console.log(databaseConfig);
+        if (process.env.NODE_ENV === "development") {
+            console.log("[PostgresContext]", databaseConfig);
+        }
     }, [databaseConfig])
     
     return (
@@ -35,7 +37,7 @@ export function usePostgresConfig(): NonNullable<DatabaseConfigHookType> {
     const context = useContext(PostgresContext);
 
     if (!context) {
-        throw new Error("useTheme must be used within a ThemeProvider");
+        throw new Error("usePostgresConfig must be used within a PostgresContextProvider");
     }
 
     return context!;

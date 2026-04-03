@@ -32,10 +32,12 @@ export default function QueryResults(props: QueryResultProps) {
 	}
 
 	const handleRowClick = (rowId: number) => {
-		console.log("Row clicked with ID:", rowId);
-		props.setSelectedRowId(rowId)
+		if (process.env.NODE_ENV === "development") {
+			console.log("Row clicked with ID:", rowId);
+		}
+		props.setSelectedRowId(rowId);
 		props.openDialog(rowId);
-	}
+	};
 
 
 	return (

@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/useToast"
 import { type ETLConfig } from "@/components/ETLConfigTable"
 import { Database } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
-import { useUsername } from "@/context/usernameContext"
 import PostgresConfig from "@/components/PostgresConfig"
 import { DatabaseConfig } from "@/types/DatabaseConfig"
 import { PostgresContextProvider } from "@/context/postgresContext"
@@ -14,10 +13,10 @@ import QueryResult from "@/components/QueryResult"
 import ConfigDialogue from "@/components/ConfigDialogue"
 
 interface Props {
-  defaultIp: string
-}
+	defaultConnectionString: DatabaseConfig
+}	
 
-export default function DBExplorerPage({ defaultIp }: Props) {
+export default function DBExplorerPage({defaultConnectionString}: Props) {
 	const { toast } = useToast();
 	const [isDbConfigured, setIsDbConfigured] = useState(false);
 	const [isQuerying, setIsQuerying] = useState(false);
@@ -26,12 +25,15 @@ export default function DBExplorerPage({ defaultIp }: Props) {
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
 	const [columnsConfig, setcolumnsConfig] = useState<ColumnType[]>([]);
 
-	const username = useUsername();
+	const updateQuery = async (rowId: number, postgresConfig: DatabaseConfig, queryData: ColumnType[]): Promise<boolean> => {
+		const updatedRecord = queryData.reduce((acc, column) => {
+			acc[column.key] = column.value;
+			return acc;
+		}, {} as Record<string, unknown>);
 
-	const updateQuery = async (rowId: number, postgresConfig: DatabaseConfig, queryData: ColumnType[]) => {
 		try {
-			const resp: Response = await fetch(`/api/etl_config_table/${selectedRowId}`, {
-				method: 'PUT',
+			const resp: Response = await fetch(`/api/etl_config_table/${rowId}`, {
+				method: "PUT",
 				body: JSON.stringify({
 					poolCredentials: {
 						host: postgresConfig.host,
@@ -41,36 +43,40 @@ export default function DBExplorerPage({ defaultIp }: Props) {
 						db: postgresConfig.databaseName,
 						tableName: postgresConfig.tableName,
 					},
-					updatedConfig: columnsConfig.reduce((acc, column) => {
-						acc[column.key] = column.value;
-						return acc;
-					}, {} as Record<string, any>),
-				})
-			})
+					updatedConfig: updatedRecord,
+				}),
+			});
 
 			const data = await resp.json();
 			if (data.success) {
-				alert(`ETL Config ID #${selectedRowId} updated successfully.`);
-				// Optionally, you can add logic to refresh the table or update the row in the UI
-				setResults(prev => prev.map(item => item.id === selectedRowId ? {
-					...item, ...columnsConfig.reduce((acc, column) => {
-						acc[column.key] = column.value;
-						return acc;
-					}, {} as Record<string, any>)
-				} : item));
-			} else {
-				alert(`Failed to update ETL Config ID #${selectedRowId}: ${data.error}`);
+				toast({
+					title: "Update saved",
+					description: `ETL config #${rowId} was updated.`,
+				});
+				setResults((prev) =>
+					prev.map((item) =>
+						item.id === rowId ? { ...item, ...updatedRecord } : item,
+					),
+				);
+				return true;
 			}
+			toast({
+				title: "Update failed",
+				description: data.error ?? "Unknown error",
+				variant: "destructive",
+			});
+			return false;
+		} catch (error: unknown) {
+			console.error("Error updating ETL Config:", error);
+			toast({
+				title: "Update failed",
+				description:
+					error instanceof Error ? error.message : "An unexpected error occurred.",
+				variant: "destructive",
+			});
+			return false;
 		}
-		catch (error: any) {
-			console.error('Error updating ETL Config:', error);
-			alert(`An error occurred while updating ETL Config ID #${selectedRowId}.`);
-		}
-		finally {
-			// Any cleanup actions if necessary
-			console.log('Update request ran.');
-		};
-	}
+	};
 
 	const openDialog = (rowId: number) => {
 		setIsDialogOpen(true)
@@ -108,14 +114,17 @@ export default function DBExplorerPage({ defaultIp }: Props) {
 			});
 
 			const data = await resp.json();
-			console.log("ETL Config Query Results:", data);
+			if (process.env.NODE_ENV === "development") {
+				console.log("ETL Config Query Results:", data);
+			}
 			if (data.success) {
-				setResults(prev => prev = data.data);
+				setResults(Array.isArray(data.data) ? data.data : []);
 
+				const n = Array.isArray(data.data) ? data.data.length : 0;
 				toast({
-					title: "Query Complete",
-					description: `Found records matching your criteria.`,
-				})
+					title: "Query complete",
+					description: n === 0 ? "No rows returned." : `Found ${n} row${n === 1 ? "" : "s"}.`,
+				});
 			}
 			else {
 				toast({
@@ -148,26 +157,32 @@ export default function DBExplorerPage({ defaultIp }: Props) {
 			});
 			const response = await Data.json();
 			if (response.success) {
-				console.log(response);
-				alert(`ETL Config ID #${rowId} deleted successfully.`);
-
-				setResults(prev => prev.filter(item => item.id !== rowId));
+				toast({
+					title: "Deleted",
+					description: `ETL config #${rowId} was removed.`,
+				});
+				setResults((prev) => prev.filter((item) => item.id !== rowId));
+			} else {
+				toast({
+					title: "Delete failed",
+					description: response.error ?? "Unknown error",
+					variant: "destructive",
+				});
 			}
-			else {
-				alert(`Failed to delete ETL Config ID #${rowId}: ${response.error}`);
-			}
-
 		} catch (error) {
-			console.error('Error deleting ETL Config:', error);
-			alert(`An error occurred while deleting ETL Config ID #${rowId}.`);
-		} finally {
-			console.log('Delete request ran.');
-		};
-	}
+			console.error("Error deleting ETL Config:", error);
+			toast({
+				title: "Delete failed",
+				description:
+					error instanceof Error ? error.message : "An unexpected error occurred.",
+				variant: "destructive",
+			});
+		}
+	};
 
 
 	return (
-		<PostgresContextProvider defaultHost={defaultIp}>
+		<PostgresContextProvider defaultConnectionString={defaultConnectionString}>
 			<main className="min-h-screen bg-background py-8 px-4">
 				<div className="max-w-6xl mx-auto space-y-8">
 					<header className="flex items-center gap-3">
@@ -204,10 +219,10 @@ export default function DBExplorerPage({ defaultIp }: Props) {
 					</div>
 				</div>
 
-				<ConfigDialogue 
+				<ConfigDialogue
 					columnsConfig={columnsConfig}
 					isDialogOpen={isDialogOpen}
-					selectedRowId={selectedRowId!}
+					selectedRowId={selectedRowId}
 					setIsDialogOpen={setIsDialogOpen}
 					setcolumnsConfig={setcolumnsConfig}
 					updateQuery={updateQuery}

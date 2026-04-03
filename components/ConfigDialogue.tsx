@@ -12,20 +12,22 @@ import { Plus, Trash2 } from "lucide-react"
 import { ColumnType } from "@/types/ColumnType"
 import { DatabaseConfig } from "@/types/DatabaseConfig"
 import { usePostgresConfig } from "@/context/postgresContext"
+import { useToast } from "@/hooks/useToast"
 
 interface propsConfigDialogue {
 	columnsConfig: ColumnType[];
 	isDialogOpen: boolean;
-	selectedRowId: number;
+	selectedRowId: number | null;
 
 	setIsDialogOpen: Dispatch<SetStateAction<boolean>>;
 	setcolumnsConfig: Dispatch<SetStateAction<ColumnType[]>>;
 
-	updateQuery: (rowId: number, postgresConfig: DatabaseConfig, queryData: any) => void
+	updateQuery: (rowId: number, postgresConfig: DatabaseConfig, queryData: ColumnType[]) => Promise<boolean>;
 }
 
 export default function ConfigDialogue(props: propsConfigDialogue) {
 	const { databaseConfig } = usePostgresConfig();
+	const { toast } = useToast();
 
 
 	const addInputRow = (type: "text" | "select" | "textarea") => {
@@ -51,24 +53,29 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 	}
 
 	async function handleDialogSave() {
-		console.log("Saving configuration for row ID:", props.selectedRowId);
-		if (props.selectedRowId === null) {
-			alert("No row selected for update.");
+		if (props.selectedRowId == null) {
+			toast({
+				title: "No row selected",
+				description: "Open a row from the results table before saving.",
+				variant: "destructive",
+			});
 			return;
 		}
 
-		// Update DB Record
-		props.updateQuery(props.selectedRowId, databaseConfig, props.columnsConfig)
-
-
-		props.setIsDialogOpen(false)
+		const ok = await props.updateQuery(props.selectedRowId, databaseConfig, props.columnsConfig);
+		if (ok) {
+			props.setIsDialogOpen(false);
+		}
 	}
 
 	return (
 		<Dialog open={props.isDialogOpen} onOpenChange={props.setIsDialogOpen}>
 			<DialogContent className="w-[90vw] h-[90vh] overflow-hidden flex flex-col max-w-none max-h-none">
 				<DialogHeader>
-					<DialogTitle>Edit Row Configuration {props.selectedRowId !== null && `(ID: ${props.selectedRowId})`}</DialogTitle>
+					<DialogTitle>
+						Edit Row Configuration
+						{props.selectedRowId != null ? ` (ID: ${props.selectedRowId})` : ""}
+					</DialogTitle>
 					<DialogDescription>
 						Customize your input fields below. Click the add buttons to create new rows.
 					</DialogDescription>
@@ -118,7 +125,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 											<Textarea
 												id={`input-${column.id}`}
 												value={column.value}
-												onChange={(e) => updateInputRowValue(column.key, e.target.value)}
+												onChange={(e) => updateInputRowValue(column.id, e.target.value)}
 												placeholder="Enter multi-line text..."
 												rows={4}
 											/>
@@ -155,12 +162,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 						<Button variant="outline" onClick={() => props.setIsDialogOpen(false)}>
 							Cancel
 						</Button>
-						<Button
-							onClick={() => {
-								handleDialogSave()
-								props.setIsDialogOpen(false)
-							}}
-						>
+						<Button type="button" onClick={() => void handleDialogSave()}>
 							Save Configuration
 						</Button>
 					</div>
