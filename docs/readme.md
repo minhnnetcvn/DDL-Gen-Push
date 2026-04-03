@@ -20,7 +20,7 @@
           ▼                                     ▼
 ┌─────────────────────┐          ┌─────────────────────────────┐
 │    DB Config        │          │  Config for Gold & Silver   │
-│ (Host, Port, DB)    │          │ Layers available after edit │
+│ (DDL, DB)    │          │ Layers available after edit │
 └─────────┬───────────┘          └──────────────┬──────────────┘
           │                                     │
           ▼                                     │
@@ -36,8 +36,7 @@
 - **Minimum Requirements**: Node.js version 24.12 LTS or higher.
 - **Install dependencies**:
 ```bash
-cd next-js-forms   # Optional if not in root folder
-npm i
+npm ci
 ```
 - **Protocol Notes**:
   - **Local**: Use HTTP

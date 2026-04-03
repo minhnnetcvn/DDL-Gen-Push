@@ -19,16 +19,20 @@ interface SchemaRegistryProp {
 	showColumnsConfig: boolean;
 	setShowColumnsConfig: Dispatch<SetStateAction<boolean>>;
 	setTableConfig: Dispatch<SetStateAction<TableConfig>>;
+	defaultIp: string;
 }
 
 export function SchemaRegistry(props: SchemaRegistryProp) {
+	console.log("SchemaRegistry component rendered with IPAddress:", props.defaultIp);
+
 	const [formData, setFormData] = useState({
-		schemaRegistryUrl: "10.8.75.82:8081",
+		schemaRegistryUrl: props.defaultIp
+			? `${props.defaultIp}:8081`
+			: "localhost:8081",
 		tableName: "",
 		option: "",
 		createdBy: ""
 	})
-
 	const [errors, setErrors] = useState({
 		schemaRegistryUrl: "",
 		tableName: "",
@@ -118,9 +122,10 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 				}
 			})
 		} catch (error: any) {
+			const errorMessage = error?.message || String(error) || "Failed to process schema registry data";
 			toast({
 				title: "Error",
-				description: error || "Failed to process schema registry data",
+				description: errorMessage,
 				variant: "destructive",
 			})
 		} finally {

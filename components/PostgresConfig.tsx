@@ -18,32 +18,23 @@ interface PostgresFormProps {
 export default function PostgresConfig(props: PostgresFormProps) {
 	const { databaseConfig, setDatabaseConfig } = usePostgresConfig();
 
-	const [postgresData, setPostgresData] = useState<DatabaseConfig>({
-		host: "10.8.75.82",
-		port: "5432",
-		user: "postgres",
-		password: "postgres",
-		databaseName: "postgres",
-		tableName: "etl_table_config",
-	});
+	console.log()
 
 	const [isSubmittingPostgres, setIsSubmittingPostgres] = useState(false)
 
 	const handlePostgresSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
+		setIsSubmittingPostgres(true);
+
 		try {
-			setIsSubmittingPostgres(prev => prev = true);
-			props.submitConfig ? props.submitConfig(postgresData) : "";
-			setDatabaseConfig(prev => prev = postgresData);
-			props.setIsDbConfigured ? props.setIsDbConfigured(true) : "";
-		}
-		catch (error) {
+			props.submitConfig?.(databaseConfig);
+			props.setIsDbConfigured?.(true);
+		} catch (error) {
 			console.log(error);
+		} finally {
+			setIsSubmittingPostgres(false);
 		}
-		finally {
-			setIsSubmittingPostgres(prev => prev = false);
-		}
-	}
+	};
 
 
 	return (
@@ -60,8 +51,13 @@ export default function PostgresConfig(props: PostgresFormProps) {
 							<Input
 								id="host"
 								placeholder="localhost or 192.168.1.1"
-								value={postgresData.host}
-								onChange={(e) => setPostgresData({ ...postgresData, host: e.target.value })}
+								value={databaseConfig.host}
+								onChange={(e) =>
+									setDatabaseConfig(prev => ({
+										...prev,
+										host: e.target.value
+									}))
+								}
 								required
 								disabled={props.isDbConfigured}
 							/>
@@ -71,8 +67,8 @@ export default function PostgresConfig(props: PostgresFormProps) {
 							<Input
 								id="port"
 								placeholder="5432"
-								value={postgresData.port}
-								onChange={(e) => setPostgresData({ ...postgresData, port: e.target.value })}
+								value={databaseConfig.port}
+								onChange={(e) => setDatabaseConfig(prev => ({ ...prev, port: e.target.value }))}
 								required
 								disabled={props.isDbConfigured}
 							/>
@@ -82,8 +78,8 @@ export default function PostgresConfig(props: PostgresFormProps) {
 							<Input
 								id="user"
 								placeholder="postgres"
-								value={postgresData.user}
-								onChange={(e) => setPostgresData({ ...postgresData, user: e.target.value })}
+								value={databaseConfig.user}
+								onChange={(e) => setDatabaseConfig(prev => ({ ...prev, user: e.target.value }))}
 								required
 								disabled={props.isDbConfigured}
 							/>
@@ -93,8 +89,8 @@ export default function PostgresConfig(props: PostgresFormProps) {
 							<Input
 								id="password"
 								type="password"
-								value={postgresData.password}
-								onChange={(e) => setPostgresData({ ...postgresData, password: e.target.value })}
+								value={databaseConfig.password}
+								onChange={(e) => setDatabaseConfig(prev => ({ ...prev, password: e.target.value }))}
 								required
 								disabled={props.isDbConfigured}
 							/>
@@ -104,8 +100,8 @@ export default function PostgresConfig(props: PostgresFormProps) {
 							<Input
 								id="databaseName"
 								placeholder="my_database"
-								value={postgresData.databaseName}
-								onChange={(e) => setPostgresData({ ...postgresData, databaseName: e.target.value })}
+								value={databaseConfig.databaseName}
+								onChange={(e) => setDatabaseConfig(prev => ({ ...prev, databaseName: e.target.value }))}
 								required
 								disabled={props.isDbConfigured}
 							/>
@@ -115,8 +111,8 @@ export default function PostgresConfig(props: PostgresFormProps) {
 								<Label htmlFor="tableName">Config Table</Label>
 								<Input
 									id="tableName"
-									value={postgresData.tableName}
-									onChange={(e) => setPostgresData({ ...postgresData, tableName: e.target.value })}
+									value={databaseConfig.tableName}
+									onChange={(e) => setDatabaseConfig(prev => ({ ...prev, tableName: e.target.value }))}
 									required
 									disabled={props.isDbConfigured}
 								/>

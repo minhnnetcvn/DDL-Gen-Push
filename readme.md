@@ -21,12 +21,23 @@ Truy cập địa chỉ `localhost:3000` và sử dụng
 ### Local (Không khuyến nghị)
 #### Yêu cầu
 - Node.js phiên bản 24.12 LTS trở lên
-- Powershell sẵn trên máy
+- PowerShell sẵn trên máy (Windows)
+- Để chạy bash script (Linux/macOS): `curl`, `jq` hoặc `PowerShell`
 
 #### Cài đặt dependencies
 ```bash
    cd next-js-forms #Optional nếu chưa vào root folder
    npm i
+```
+
+#### Cài đặt dependencies cho bash script (Linux/macOS)
+```bash
+   # Ubuntu/Debian
+   sudo apt-get install curl jq powershell
+   
+   # macOS (cần Homebrew)
+   brew install curl jq
+   brew install --cask powershell
 ```
 
 #### Chú ý về giao thức
@@ -58,12 +69,39 @@ Access the application at `http://localhost:3000` and start using it.
 
 #### Requirements
 - Node.js version **24.12 LTS or higher**
-- PowerShell available on the machine
+- PowerShell available on the machine (Windows)
+- For bash script (Linux/macOS): `curl`, `jq`
 
 #### Install dependencies
 ```bash
 cd next-js-forms # Optional if not already in the root folder
 npm install
+```
+
+#### Install dependencies for bash script (Linux/macOS)
+```bash
+   # Ubuntu/Debian
+   sudo apt-get install curl jq powershell
+   
+   # macOS (requires Homebrew)
+   brew install curl jq
+   brew install --cask powershell
+```
+
+#### Using ETL config generation script
+
+**PowerShell (Windows)**:
+```powershell
+   .\scripts\generate-etl-configs.ps1 -TableName "MY_TABLE" -registryUrl "http://localhost:8081"
+```
+
+**Bash (Linux/macOS)**:
+```bash
+   chmod +x scripts/generate-etl-configs.sh
+   ./scripts/generate-etl-configs.sh "MY_TABLE" "http://localhost:8081"
+   
+   # With debug mode
+   VERBOSE=1 ./scripts/generate-etl-configs.sh "MY_TABLE"
 ```
 
 #### Protocol Notes

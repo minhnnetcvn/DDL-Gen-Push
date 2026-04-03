@@ -1,4 +1,4 @@
-import { ConfigParams, DDLParams, TransformParams } from "@/types/Params";
+import { ConfigParams, DDLParams, TransformParams } from "@/types/params";
 import datetimeNow from "./timeGenerator";
 import { ColumnsClassificationType } from "@/types/ColumnsClassificationType";
 import { ColumnRowData } from "@/types/ColumnRowData";

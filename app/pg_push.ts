@@ -1,15 +1,3 @@
-// db.ts
-import { Pool } from 'pg'
-
-export const pool = new Pool({
-	host: process.env.PG_HOST,
-	port: Number(process.env.PG_PORT || 5432),
-	user: process.env.PG_USER,
-	password: process.env.PG_PASSWORD,
-	database: process.env.PG_DATABASE,
-	ssl: false // true if using cloud PG
-})
-
 import { pool } from '@/lib/db'
 
 async function insertConfigRow() {
@@ -26,16 +14,16 @@ async function insertConfigRow() {
 		'SUM'
 	]
 
-	await pool.query(sql, values)
+	await pool().query(sql, values)
 }
 
-export async function POST(req: Request) {
-	const body = await req.json()
-
-	await bulkInsertConfigs(
-		body.tableName,
-		body.columns
-	)
-
-	return Response.json({ success: true })
-}
+// export async function POST(req: Request) {
+// 	const body = await req.json()
+//
+// 	await bulkInsertConfigs(
+// 		body.tableName,
+// 		body.columns
+// 	)
+//
+// 	return Response.json({ success: true })
+// }

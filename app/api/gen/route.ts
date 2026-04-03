@@ -2,7 +2,7 @@ import { goldDDL, generateColumnSQL, transformSQLContent, silverDDL, goldConfig,
 import { ColumnsClassificationType } from "@/types/ColumnsClassificationType";
 import { GenRequest } from "@/types/GenRequest";
 import { GenResponse } from "@/types/GenResponse";
-import { ConfigParams, DDLParams } from "@/types/Params";
+import { ConfigParams, DDLParams } from "@/types/params";
 import { SQLQuery } from "@/types/PrimitiveTypes";
 import { TableTypes } from "@/types/TableConfig";
 import { NextResponse } from "next/server"
