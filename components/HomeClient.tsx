@@ -18,9 +18,10 @@ import { TableConfig, TableTypes } from "@/types/TableConfig"
 interface Props {
   defaultKafkaIp: string
   defaultConnectionString: DatabaseConfig
+  TLSEnabled: boolean
 }
 
-export default function HomePage({ defaultKafkaIp, defaultConnectionString }: Props) {
+export default function HomePage({ defaultKafkaIp, defaultConnectionString, TLSEnabled }: Props) {
 	const [sqlContentGold, setSQLContentGold] = useState("");
 	const [sqlContentSilver, setSQLContentSilver] = useState("");
 
@@ -44,7 +45,7 @@ export default function HomePage({ defaultKafkaIp, defaultConnectionString }: Pr
 		const { isInvalidExists, invalidConfigs } = validateColumnsConfig(columnsConfig)
 
 		if (isInvalidExists) {
-			alert(`Validation Error: Please fill in all fields for rows ${invalidConfigs?.join(', ')}`);
+			alert(`Lỗi Xác thực: Vui lòng điền đầy đủ các trường cho các hàng ${invalidConfigs?.join(', ')}`);
 			setIsSubmittingColumns(false)
 			return;
 		}
@@ -69,12 +70,12 @@ export default function HomePage({ defaultKafkaIp, defaultConnectionString }: Pr
 			setSQLContentGold(result.goldConfigQuery!);
 			console.log(result);
 
-			alert(`Success! Submitted ${columnsConfig.length} column(s) configuration`);
+			alert(`Thành công! Đã gửi ${columnsConfig.length} cấu hình cột`);
 
 
 		} catch (error: any) {
-			const errorMessage = error?.message || String(error) || "Failed to process column configuration data";
-			alert(`Error: ${errorMessage}`);
+			const errorMessage = error?.message || String(error) || "Không thể xử lý dữ liệu cấu hình cột";
+			alert(`Lỗi: ${errorMessage}`);
 			console.log(error);
 		} finally {
 			setIsSubmittingColumns(false);
@@ -98,11 +99,11 @@ export default function HomePage({ defaultKafkaIp, defaultConnectionString }: Pr
 			console.log(res);
 
 			if (res.success) {
-				alert(`Success: ${res.message}`);
+				alert(`Thành công: ${res.message}`);
 			}
 
 		} catch (error: any) {
-			alert(`Error: ${error.message || "Failed to process PostgreSQL configuration"}`);
+			alert(`Lỗi: ${error.message || "Không thể xử lý cấu hình PostgreSQL"}`);
 			console.log("Error submitting ETL config:", error);
 		}
 	}
@@ -112,8 +113,8 @@ export default function HomePage({ defaultKafkaIp, defaultConnectionString }: Pr
 			<main className="min-h-screen bg-background py-12 px-4">
 				<div className="max-w-4xl mx-auto space-y-8">
 					<div className="text-center space-y-2">
-						<h1 className="text-4xl font-bold tracking-tight">ETL Table Create</h1>
-						<p className="text-muted-foreground text-lg">Create Table for ETL Config</p>
+				<h1 className="text-4xl font-bold tracking-tight">Cấu hình bảng cho ETL</h1>
+				<p className="text-muted-foreground text-lg">Tạo Cấu hình bảng cho ETL</p>
 					</div>
 
 					<SchemaRegistry

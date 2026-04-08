@@ -67,9 +67,8 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 
 		if (Object.values(newErrors).some((error) => error !== "")) {
 			toast({
-				title: "Validation Error",
-				description: "Please fix the errors before submitting",
-				variant: "destructive",
+					title: "Lỗi Xác thực",
+					description: "Vui lòng sửa các lỗi trước khi gửi",
 			});
 
 			return;
@@ -81,7 +80,9 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 			const data = await fetch("/api/schema", {
 				method: "POST",
 				body: JSON.stringify(formData),
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json"
+				},
 			})
 
 			props.resetColumns();
@@ -99,16 +100,16 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 				props.setShowColumnsConfig(true);
 
 				toast({
-					title: "Success",
-					description: "Schema registry data processed!",
+					title: "Thành công",
+					description: "Dữ liệu schema registry đã được xử lý!",
 				})
 			}
 			else {
-				alert("Error 204. No schema data received from server.");
+				alert("Lỗi 204. Không nhận được dữ liệu schema từ máy chủ.");
 
 				toast({
-					title: "Error",
-					description: "No schema matches",
+					title: "Lỗi",
+					description: "Không có schema phù hợp",
 					variant: "destructive",
 				})
 			}
@@ -122,9 +123,9 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 				}
 			})
 		} catch (error: any) {
-			const errorMessage = error?.message || String(error) || "Failed to process schema registry data";
+			const errorMessage = error?.message || String(error) || "Không thể xử lý dữ liệu schema registry";
 			toast({
-				title: "Error",
+				title: "Lỗi",
 				description: errorMessage,
 				variant: "destructive",
 			})
@@ -137,19 +138,19 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Step 1: Get Schema Registry
-</CardTitle>
-				<CardDescription>Configure schema registry with URL, table name, and option validation</CardDescription>
+				<CardTitle>Bước 1: Lấy Schema Registry
+				</CardTitle>
+				<CardDescription>Cấu hình schema registry với URL, tên bảng và xác thực tùy chọn</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSchemaSubmit} onReset={() => props.setShowColumnsConfig(prev => prev = false)} className="space-y-6">
 					<div className="space-y-2">
-						<Label htmlFor="schemaRegistryUrl">Schema Registry URL</Label>
+						<Label htmlFor="schemaRegistryUrl">URL Schema Registry</Label>
 						<Input
 							id="schemaRegistryUrl"
 							name="schemaRegistryUrl"
 							type="text"
-							placeholder="localhost:8081 or 192.168.1.1:9092"
+							placeholder="localhost:8081 hoặc 192.168.1.1:9092 (không chứa HTTP/HTTPS)"
 							value={formData.schemaRegistryUrl}
 							onChange={handleChange}
 							onBlur={handleBlur}
@@ -160,12 +161,12 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="tableName">Table Name</Label>
+						<Label htmlFor="tableName">Tên Bảng</Label>
 						<Input
 							id="tableName"
 							name="tableName"
 							type="text"
-							placeholder="users_table or my_data_table"
+							placeholder="users_table hoặc my_data_table"
 							value={formData.tableName}
 							onChange={handleChange}
 							onBlur={handleBlur}
@@ -176,22 +177,22 @@ export function SchemaRegistry(props: SchemaRegistryProp) {
 					</div>
 
 					<div className="space-y-3">
-						<Label>Option</Label>
+						<Label>Tùy chọn</Label>
 						<RadioGroup value={formData.option} disabled={props.showColumnsConfig}>
 							<div className="flex items-center space-x-2">
 								<RadioGroupItem value="" id="both" disabled={props.showColumnsConfig} />
 								<Label htmlFor="both" className="font-normal cursor-pointer">
-									Both
+									Cả hai
 								</Label>
 							</div>
 						</RadioGroup>
 					</div>
 
 					{!props.showColumnsConfig ? (<Button type="submit" className="w-full" disabled={isSubmitting}>
-						{isSubmitting ? "Submitting..." : "Submit"}
+						{isSubmitting ? "Đang gửi..." : "Gửi"}
 					</Button>) :
 						(<Button type="reset" className="w-full">
-							Edit
+							Chỉnh sửa
 						</Button>)
 					}
 				</form>

@@ -20,14 +20,14 @@ export function ColumnRow({ row, onUpdate, onRemove, canRemove }: ColumnRowProps
                 <Input
                     value={row.columnName}
                     onChange={(e) => onUpdate(row.id, "columnName", e.target.value)}
-                    placeholder="e.g., user_id"
+                    placeholder="VD: user_id"
                     required
                 />
             </td>
             <td className="p-4">
                 <Select value={row.type} onValueChange={(value) => onUpdate(row.id, "type", value)} required>
                     <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue placeholder="Chọn kiểu" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="TIMESTAMP">Timestamp</SelectItem>

@@ -33,8 +33,8 @@ export default function ColumnBuilder(props : ColumnBuilderProps) {
     const handleRemoveColumn = (id: string) => {
         if (props.columnsConfig.length === 1) {
             toast({
-                title: "Cannot remove",
-                description: "At least one row is required",
+                title: "Không thể xóa",
+                description: "Cần ít nhất một hàng",
                 variant: "destructive",
             });
             return
@@ -54,19 +54,19 @@ export default function ColumnBuilder(props : ColumnBuilderProps) {
     return (
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CardHeader>
-                <CardTitle>Step 2: Column Configuration</CardTitle>
-                <CardDescription>Define columns with their names, data types, and aggregate methods</CardDescription>
+                <CardTitle>Bước 2: Cấu hình Cột</CardTitle>
+                <CardDescription>Xác định các cột với tên, kiểu dữ liệu và phương pháp aggregate</CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleColumnsSubmit} className="space-y-6">
                     <div className="flex justify-between">
                         <div className="flex items-center justify-around h-6 gap-4">
                         <Label htmlFor="table-type" className="text-sm font-medium">
-                            Table Type (For Gold)
+                            Loại Bảng (Cho Gold)
                         </Label>
                         <Select value={tableType} onValueChange={handleTableTypeChange}>
                             <SelectTrigger id="table-type" className="w-60">
-                            <SelectValue placeholder="Select table type..." />
+                            <SelectValue placeholder="Chọn loại bảng..." />
                             </SelectTrigger>
                             <SelectContent>
                             <SelectItem value="dim">Dimension Table</SelectItem>
@@ -76,7 +76,7 @@ export default function ColumnBuilder(props : ColumnBuilderProps) {
                     </div>
                         <Button type="button" onClick={() => props.addColumn()} size="sm">
                             <Plus className="h-4 w-4 mr-2" />
-                            Add Row
+                            Thêm Hàng
                         </Button>
                     </div>
 
@@ -108,7 +108,7 @@ export default function ColumnBuilder(props : ColumnBuilderProps) {
 
                     <div className="flex justify-end">
                     <Button type="submit" disabled={props.isSubmittingColumns}>
-                        {props.isSubmittingColumns ? "Submitting..." : "Save Configuration"}
+                        {props.isSubmittingColumns ? "Đang gửi..." : "Lưu Cấu hình"}
                     </Button>
                     </div>
                 </form>

@@ -7,7 +7,7 @@ export function Navbar() {
 	const username = useUsername();
 
 	const handleResetUsername = () => {
-		confirm("Are you sure you want to reset your username?")
+		confirm("Bạn có chắc mắn muốn đặt lại tên dùng?")
 			&& sessionStorage.removeItem("username");
 		window.location.reload();
 	}
@@ -17,7 +17,7 @@ export function Navbar() {
 				<div className="flex items-center gap-6 text-sm font-medium">
 					<Link href="/" className="flex items-center gap-2 transition-colors hover:text-primary">
 						<Home className="h-4 w-4" />
-						<span>Create</span>
+						<span>Tạo</span>
 					</Link>
 					<Link href="/db-explorer" className="flex items-center gap-2 transition-colors hover:text-primary">
 						<Database className="h-4 w-4" />

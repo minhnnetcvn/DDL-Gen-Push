@@ -23,9 +23,7 @@ export default function QueryResults(props: QueryResultProps) {
 
 	const handleIdClick = (rowId: number) => {
 		setDeleteRowId(prev => prev = rowId);
-		const confirmDelete = confirm(`Do you want to delete row ID #${rowId}?`);
-		
-		if (confirmDelete) {
+			const confirmDelete = confirm(`Bạn có muốn xóa hàng ID #${rowId}?`);
 			props.deleteConfig(databaseConfig, rowId)
 		}
 		setDeleteRowId(prev => prev = null);
@@ -44,8 +42,8 @@ export default function QueryResults(props: QueryResultProps) {
 		<Card className="animate-in fade-in slide-in-from-top-4 duration-500 col-span-full">
 			<CardHeader className="flex flex-row items-center justify-between">
 				<div>
-					<CardTitle>Results</CardTitle>
-					<CardDescription>ETL configurations matching your filters</CardDescription>
+						<CardTitle>Kết Quả</CardTitle>
+						<CardDescription>Đường dẫn cấu hình ETL phù hợp với các bộ lọc</CardDescription>
 				</div>
 			</CardHeader>
 			<CardContent>

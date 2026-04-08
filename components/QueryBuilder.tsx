@@ -37,8 +37,8 @@ export default function QueryBuilder(props: QueryBuilderProps) {
 		<div className="lg:col-span-2 space-y-8">
 			<Card className={!props.isDbConfigured ? "opacity-50 pointer-events-none" : ""}>
 				<CardHeader>
-					<CardTitle>Query Filters</CardTitle>
-					<CardDescription>Search for specific ETL configurations</CardDescription>
+					<CardTitle>Bộ Lọc Truy vấn</CardTitle>
+					<CardDescription>Tìm kiếm các cấu hình ETL cụ thể</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleQuerySubmit} className="space-y-6">
@@ -70,12 +70,12 @@ export default function QueryBuilder(props: QueryBuilderProps) {
 							{props.isQuerying ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Running Query...
+									Đang chạy Truy vấn...
 								</>
 							) : (
 								<>
 									<Search className="mr-2 h-4 w-4" />
-									Run Query
+									Chạy Truy vấn
 								</>
 							)}
 						</Button>
