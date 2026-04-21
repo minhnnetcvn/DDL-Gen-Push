@@ -73,7 +73,7 @@ export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowCl
 						{data.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={ETL_CONFIG_TABLE_COLUMN_COUNT} className="h-24 text-center text-muted-foreground">
-									No results found.
+									Không tìm thấy kết quả.
 								</TableCell>
 							</TableRow>
 						) : (
@@ -99,7 +99,7 @@ export function ETLConfigTable({ data, onIdClick: onIdClick, onRowClick: onRowCl
 									<TableCell className="max-w-[200px] truncate" title={row.target_table_full_name}>
 										{row.target_table_name}
 									</TableCell>
-									<TableCell>{row.enabled ? "Yes" : "No"}</TableCell>
+									<TableCell>{row.enabled ? "Có" : "Không"}</TableCell>
 									<TableCell className="max-w-[200px] truncate" title={row.target_table_ddl || ""}>
 										{row.target_table_ddl}
 									</TableCell>

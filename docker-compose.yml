@@ -6,4 +6,12 @@ services:
       - "3000:3000"
     environment:
       - "DEFAULT_IP_ADDRESS=10.8.75.82"
+      - "SHELL_USED=powershell"  # available: powershell|bash (case-insensitive)
+      - "DEFAULT_DB_HOST=10.8.75.82"
+      - "DEFAULT_DB_PORT=5432"
+      - "DEFAULT_DB_USER=postgres"
+      - "DEFAULT_DB_PASSWORD=postgres"
+      - "DEFAULT_DB_NAME=postgres"
+      - "DEFAULT_DB_TABLE=etl_table_config"
+      - "DEFAULT_DB_SCHEMA=public"
     restart: unless-stopped

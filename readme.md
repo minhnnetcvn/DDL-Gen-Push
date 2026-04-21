@@ -4,7 +4,7 @@
 
 
 ## Cài đặt
-### Chạy bằng Docker (Khuyến nghị)
+### Chạy bằng Docker
 #### Yêu cầu
 - Docker Desktop
 
@@ -18,16 +18,21 @@
 
 Truy cập địa chỉ `localhost:3000` và sử dụng
 
-### Local (Không khuyến nghị)
+### Local
 #### Yêu cầu
 - Node.js phiên bản 24.12 LTS trở lên
 - PowerShell sẵn trên máy (Windows)
-- Để chạy bash script (Linux/macOS): `curl`, `jq` hoặc `PowerShell`
+- Để chạy script trên (Linux/macOS): `curl`, `jq` hoặc `PowerShell`
 
 #### Cài đặt dependencies
 ```bash
    cd next-js-forms #Optional nếu chưa vào root folder
    npm i
+```
+
+#### Build project
+```bash
+   npm run build
 ```
 
 #### Cài đặt dependencies cho bash script (Linux/macOS)
@@ -39,6 +44,32 @@ Truy cập địa chỉ `localhost:3000` và sử dụng
    brew install curl jq
    brew install --cask powershell
 ```
+
+#### Cấu hình ENV
+Tạo file `.env.local` dựa trên template `env template.txt` tại thư mục gốc của project:
+
+```env
+DEFAULT_IP_ADDRESS_KAFKA="10.8.75.69"
+DEFAULT_DB_HOST="10.8.75.82"
+DEFAULT_DB_PORT="5432"
+DEFAULT_DB_USER="postgres"
+DEFAULT_DB_PASSWORD="postgres"
+DEFAULT_DB_NAME="postgres"
+DEFAULT_DB_TABLE="etl_table_config"
+DEFAULT_DB_SCHEMA="public"
+SHELL_USED="powershell"
+```
+
+**Giải thích các biến:**
+- `DEFAULT_IP_ADDRESS_KAFKA`: Địa chỉ IP của server Kafka
+- `DEFAULT_DB_HOST`: Địa chỉ host của database PostgreSQL
+- `DEFAULT_DB_PORT`: Cổng kết nối database (mặc định: 5432)
+- `DEFAULT_DB_USER`: Tên user đăng nhập database
+- `DEFAULT_DB_PASSWORD`: Mật khẩu đăng nhập database
+- `DEFAULT_DB_NAME`: Tên database cần kết nối
+- `DEFAULT_DB_TABLE`: Tên bảng lưu trữ cấu hình ETL
+- `DEFAULT_DB_SCHEMA`: Schema của database (mặc định: public)
+- `SHELL_USED`: Shell được sử dụng cho script (`powershell` hoặc `bash`)
 
 #### Chú ý về giao thức
 - **Local**: Sử dụng HTTP
@@ -78,6 +109,11 @@ cd next-js-forms # Optional if not already in the root folder
 npm install
 ```
 
+#### Build project
+```bash
+npm run build
+```
+
 #### Install dependencies for bash script (Linux/macOS)
 ```bash
    # Ubuntu/Debian
@@ -87,6 +123,40 @@ npm install
    brew install curl jq
    brew install --cask powershell
 ```
+
+#### Environment Configuration
+Create a `.env.local` file based on the `env template.txt` template in the project root directory:
+
+```env
+DEFAULT_IP_ADDRESS_KAFKA="10.8.75.69"
+DEFAULT_DB_HOST="10.8.75.82"
+DEFAULT_DB_PORT="5432"
+DEFAULT_DB_USER="postgres"
+DEFAULT_DB_PASSWORD="postgres"
+DEFAULT_DB_NAME="postgres"
+DEFAULT_DB_TABLE="etl_table_config"
+DEFAULT_DB_SCHEMA="public"
+SHELL_USED="powershell"
+```
+
+**Variable Descriptions:**
+- `DEFAULT_IP_ADDRESS_KAFKA`: IP address of the Kafka server
+- `DEFAULT_DB_HOST`: Host address of PostgreSQL database
+- `DEFAULT_DB_PORT`: Database connection port (default: 5432)
+- `DEFAULT_DB_USER`: Database login username
+- `DEFAULT_DB_PASSWORD`: Database login password
+- `DEFAULT_DB_NAME`: Database name to connect
+- `DEFAULT_DB_TABLE`: Table name for storing ETL configuration
+- `DEFAULT_DB_SCHEMA`: Database schema (default: public)
+- `SHELL_USED`: Shell used for scripts (`powershell` or `bash`)
+
+---
+
+## Usage Notes
+
+#### Protocol Considerations
+- **Local**: Use HTTP
+- **Remote/Public**: Use HTTPS
 
 #### Using ETL config generation script
 

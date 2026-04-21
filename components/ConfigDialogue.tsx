@@ -73,11 +73,11 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 			<DialogContent className="w-[90vw] h-[90vh] overflow-hidden flex flex-col max-w-none max-h-none">
 				<DialogHeader>
 					<DialogTitle>
-						Edit Row Configuration
+						Chỉnh sửa Cấu hình Hàng
 						{props.selectedRowId != null ? ` (ID: ${props.selectedRowId})` : ""}
 					</DialogTitle>
 					<DialogDescription>
-						Customize your input fields below. Click the add buttons to create new rows.
+						Tùy chỉnh các trường input bên dưới. Nhấn nút thêm để tạo hàng mới.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -88,7 +88,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 								<div className="flex-1 space-y-3">
 									<div className="flex items-center gap-2">
 										<Label htmlFor={`column-name-${column.id}`} className="min-w-[80px]">
-											Column Name:
+											Tên Cột:
 										</Label>
 										<Input
 											id={`column-name-${column.id}`}
@@ -104,13 +104,13 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 												id={`column-value-${column.id}`}
 												value={column.value}
 												onChange={(e) => updateInputRowValue(column.id, e.target.value)}
-												placeholder="Enter text..."
+												placeholder="Nhập văn bản..."
 											/>
 										)}
 										{column.dataType === "select" && (
 											<Select value={column.value} onValueChange={(v) => updateInputRowValue(column.id, v)}>
 												<SelectTrigger id={`input-${column.id}`}>
-													<SelectValue placeholder="Select an option" />
+													<SelectValue placeholder="Chọn một tùy chọn" />
 												</SelectTrigger>
 												<SelectContent>
 													{column.options?.map((option) => (
@@ -126,7 +126,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 												id={`input-${column.id}`}
 												value={column.value}
 												onChange={(e) => updateInputRowValue(column.id, e.target.value)}
-												placeholder="Enter multi-line text..."
+												placeholder="Nhập văn bản nhiều dòng..."
 												rows={4}
 											/>
 										)}
@@ -150,20 +150,20 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 					<div className="flex flex-wrap gap-2">
 						<Button className="cursor-pointer" type="button" variant="outline" size="sm" onClick={() => addInputRow("text")}>
 							<Plus className="h-4 w-4 mr-2" />
-							Add Text Input
+							Thêm Nhập Text
 						</Button>
 						<Button type="button" variant="outline" className="cursor-pointer" size="sm" onClick={() => addInputRow("textarea")}>
 							<Plus className="h-4 w-4 mr-2" />
-							Add Textarea
+							Thêm Vùng Văn bản
 						</Button>
 					</div>
 
 					<div className="flex justify-end gap-2">
 						<Button variant="outline" onClick={() => props.setIsDialogOpen(false)}>
-							Cancel
+							Hủy
 						</Button>
 						<Button type="button" onClick={() => void handleDialogSave()}>
-							Save Configuration
+							Lưu Cấu hình
 						</Button>
 					</div>
 				</div>

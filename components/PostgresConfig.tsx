@@ -40,8 +40,8 @@ export default function PostgresConfig(props: PostgresFormProps) {
 	return (
 		<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 col-span-1">
 			<CardHeader>
-				<CardTitle>PostgreSQL Configuration</CardTitle>
-				<CardDescription>Enter connection details for your PostgreSQL database</CardDescription>
+				<CardTitle>Cấu hình PostgreSQL</CardTitle>
+				<CardDescription>Nhập chi tiế kết nối cho database PostgreSQL của bạn</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handlePostgresSubmit} onReset={() => { if (props.setIsDbConfigured) props.setIsDbConfigured(false) }} className="space-y-4">
@@ -124,15 +124,15 @@ export default function PostgresConfig(props: PostgresFormProps) {
 							type="submit"
 							className="w-full"
 						>
-							Configure Database
+							Cấu hình Database
 						</Button>
 					) : (
 						<Button
 							type="reset"
 							variant="outline"
-							className="w-full bg-transparent"
+							className="w-full bg-transparentminh"
 						>
-							Edit Connection
+							Sửa Kết nối
 						</Button>
 					)}
 				</form>

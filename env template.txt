@@ -1,0 +1,10 @@
+DEFAULT_IP_ADDRESS_KAFKA="10.8.75.69"
+DEFAULT_DB_HOST="10.8.75.82"
+DEFAULT_DB_PORT="5432"
+DEFAULT_DB_USER="postgres"
+DEFAULT_DB_PASSWORD="postgres"
+DEFAULT_DB_NAME="postgres"
+DEFAULT_DB_TABLE="etl_table_config"
+DEFAULT_DB_SCHEMA="public"
+SHELL_USED="powershell"
+# "powershell" cho PowerShell, "bash" cho Bash
