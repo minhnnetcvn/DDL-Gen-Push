@@ -73,11 +73,13 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 			<DialogContent className="w-[90vw] h-[90vh] overflow-hidden flex flex-col max-w-none max-h-none">
 				<DialogHeader>
 					<DialogTitle>
-					Chỉnh sửa Cấu hình Hàng
-					{props.selectedRowId != null ? ` (ID: ${props.selectedRowId})` : ""}
-				</DialogTitle>
-				<DialogDescription>
-					Tùy chỉnh các trường input bên dưới. Nhấn nút thêm để tạo hàng mới.
+						Chỉnh sửa Cấu hình Hàng
+						{props.selectedRowId != null ? ` (ID: ${props.selectedRowId})` : ""}
+					</DialogTitle>
+					<DialogDescription>
+						Tùy chỉnh các trường input bên dưới. Nhấn nút thêm để tạo hàng mới.
+					</DialogDescription>
+				</DialogHeader>
 
 				<div className="flex-1 overflow-y-auto space-y-4 pr-4">
 					{props.columnsConfig.map((column) => (
@@ -86,7 +88,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 								<div className="flex-1 space-y-3">
 									<div className="flex items-center gap-2">
 										<Label htmlFor={`column-name-${column.id}`} className="min-w-[80px]">
-												Tên Cột:
+											Tên Cột:
 										</Label>
 										<Input
 											id={`column-name-${column.id}`}
@@ -108,7 +110,7 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 										{column.dataType === "select" && (
 											<Select value={column.value} onValueChange={(v) => updateInputRowValue(column.id, v)}>
 												<SelectTrigger id={`input-${column.id}`}>
-														<SelectValue placeholder="Chọn một tùy chọn" />
+													<SelectValue placeholder="Chọn một tùy chọn" />
 												</SelectTrigger>
 												<SelectContent>
 													{column.options?.map((option) => (
@@ -158,10 +160,10 @@ export default function ConfigDialogue(props: propsConfigDialogue) {
 
 					<div className="flex justify-end gap-2">
 						<Button variant="outline" onClick={() => props.setIsDialogOpen(false)}>
-						Hủy
+							Hủy
 						</Button>
 						<Button type="button" onClick={() => void handleDialogSave()}>
-						Lưu Cấu hình
+							Lưu Cấu hình
 						</Button>
 					</div>
 				</div>

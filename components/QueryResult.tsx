@@ -10,24 +10,28 @@ interface QueryResultProps {
 	isDialogueOpen: boolean;
 
 	setcolumnsConfig: Dispatch<SetStateAction<ColumnType[]>>;
-	setSelectedRowId: Dispatch<SetStateAction<number|null>>;
+	setSelectedRowId: Dispatch<SetStateAction<number | null>>;
 	openDialog: (rowId: number) => void;
 	deleteConfig: (postgresConfig: DatabaseConfig, rowId: number) => void;
 }
 
 
 export default function QueryResults(props: QueryResultProps) {
-	const {databaseConfig} = usePostgresConfig();
+	const { databaseConfig } = usePostgresConfig();
 	const [deleteRowId, setDeleteRowId] = useState<number | null>(null);
 
 
 	const handleIdClick = (rowId: number) => {
-		setDeleteRowId(prev => prev = rowId);
-			const confirmDelete = confirm(`Bạn có muốn xóa hàng ID #${rowId}?`);
-			props.deleteConfig(databaseConfig, rowId)
+		setDeleteRowId(rowId);
+
+		const confirmDelete = confirm(`Bạn có muốn xóa hàng ID #${rowId}?`);
+
+		if (confirmDelete) {
+			props.deleteConfig(databaseConfig, rowId);
 		}
-		setDeleteRowId(prev => prev = null);
-	}
+
+		setDeleteRowId(null);
+	};
 
 	const handleRowClick = (rowId: number) => {
 		if (process.env.NODE_ENV === "development") {
@@ -42,8 +46,8 @@ export default function QueryResults(props: QueryResultProps) {
 		<Card className="animate-in fade-in slide-in-from-top-4 duration-500 col-span-full">
 			<CardHeader className="flex flex-row items-center justify-between">
 				<div>
-						<CardTitle>Kết Quả</CardTitle>
-						<CardDescription>Đường dẫn cấu hình ETL phù hợp với các bộ lọc</CardDescription>
+					<CardTitle>Kết Quả</CardTitle>
+					<CardDescription>Đường dẫn cấu hình ETL phù hợp với các bộ lọc</CardDescription>
 				</div>
 			</CardHeader>
 			<CardContent>
