@@ -5,4 +5,4 @@ export interface ColumnRowData {
 	aggregateMethod: AggregateMethod;
 }
 
-export type AggregateMethod = 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN' | 'NONE' | 'ANY_VALUE' | 'FIRST_VALUE' | 'LAST_VALUE' | '';
+export type AggregateMethod = 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN' | 'PK' | 'ANY_VALUE' | 'FIRST_VALUE' | 'LAST_VALUE' | 'NONE';
