@@ -5,34 +5,36 @@ import { ColumnRowData } from "@/types/ColumnRowData";
 import { SQLQuery } from "@/types/PrimitiveTypes";
 
 function buildAggregateTransform(agg: string, columnName: string): string {
-	return `${agg}(${columnName}) AS ${columnName}`
+    return `${agg}(${columnName}) AS ${columnName}`
 }
 
 export function generateColumnSQL(columns: ColumnRowData[]): ColumnsClassificationType {
-	const goldColumnTransform: string[] = [];
-	const dimensionColumnTransform: string[] = [];
+    const goldColumnTransform: string[] = [];
+    const dimensionColumnTransform: string[] = [];
     const allColumnsDefinitions: string[] = [];
 
 
-	for (const col of columns) {
-		if (col.aggregateMethod === "NONE") {
-			dimensionColumnTransform.push(col.columnName);
+    for (const col of columns) {
+        if (col.aggregateMethod === "PK") {
+            dimensionColumnTransform.push(col.columnName);
             goldColumnTransform.push(col.columnName)
-		} else goldColumnTransform.push(buildAggregateTransform(col.aggregateMethod, col.columnName));
+		}
+        else if (col.aggregateMethod === "NONE") goldColumnTransform.push(buildAggregateTransform('', col.columnName))
+        else goldColumnTransform.push(buildAggregateTransform(col.aggregateMethod, col.columnName));
 
         allColumnsDefinitions.push(`${col.columnName} ${col.type}`)
-	}
+    }
 
-	return {
-		goldColumnTransform: goldColumnTransform.join(',\n      '),
+    return {
+        goldColumnTransform: goldColumnTransform.join(',\n      '),
         dimensionColumnTransform: dimensionColumnTransform.join(',\n      '),
         allColumnsDefinitions: allColumnsDefinitions.join(',\n      '),
-	}
+    }
 }
 
 export function goldDDL(params: DDLParams): SQLQuery {
-	const DDL = `CREATE TABLE IF NOT EXISTS ice.gold.${params.tableType == "dim" ? "dim_" : "fact_"}${params.tableName} (
-        ${params.allColumnsDefinitions != ""? `${params.allColumnsDefinitions},`: ""}
+    const DDL = `CREATE TABLE IF NOT EXISTS ice.gold.${params.tableType == "dim" ? "dim_" : "fact_"}${params.tableName} (
+        ${params.allColumnsDefinitions != "" ? `${params.allColumnsDefinitions},` : ""}
 
 		${params.tableType == "dim" ? `
                     scd_valid_from TIMESTAMP,
@@ -53,49 +55,111 @@ export function goldDDL(params: DDLParams): SQLQuery {
         ''write.target-file-size-bytes''=''268435456''
         )
     `;
-	return DDL;
+    return DDL;
 }
 
-export function buildAggregateColumnName(agg: string, columnName: string): string {
-	return `${columnName}`
-}
 
 export function transformSQLContent(params: TransformParams): SQLQuery {
-	const transformSqlTemplate = `SELECT 
-            ${params.goldColumnTransform != ""? `${params.goldColumnTransform},`: ""}
-            
+    const isFact = params.tableType === "fact";
 
-            ${params.tableType == "fact" ? `
-                    year,
-                    month,
-                    day,
-                    hour
-            `: `
-                NULL scd_valid_from,
-                NULL scd_valid_to,
-                1 is_active,
-                NULL processing_timestamp
-            `}
-            
-          FROM ice.silver.${params.tableNameLower}
-          ${params.tableType == "fact" ? `WHERE year = ''\${year}'' 
-                    AND month = ''\${month}'' 
-                    AND day = ''\${day}''
-                    AND hour = ''\${hour}''
-          `: ''}
-          GROUP BY 
-              ${params.dimensionColumnTransform}
-              ${params.tableType == "fact"? `,
-                    year,
-                    month,
-                    day,
-                    hour`: ""}
-      `;
-	return transformSqlTemplate.trim();
+    const indent = (str: string, spaces = 4) =>
+        str
+            .split("\n")
+            .map(line => line ? " ".repeat(spaces) + line : line)
+            .join("\n");
+
+    const goldCols = params.goldColumnTransform
+        ? `${params.goldColumnTransform},\n`
+        : "";
+
+    const factCTE = isFact
+        ? `
+WITH ranked AS (
+${indent(`
+SELECT
+    *,
+    ROW_NUMBER() OVER (
+        PARTITION BY Id
+        ORDER BY LastUpdated DESC
+    ) AS rn
+FROM ice.silver.${params.tableNameLower}
+WHERE year = '\${year}'
+  AND month = '\${month}'
+  AND day = '\${day}'
+  AND hour = '\${hour}'
+`, 4)}
+)
+`
+        : "";
+
+    const selectBlock = `
+SELECT
+${indent(goldCols + (isFact
+        ? `
+year,
+month,
+day,
+hour
+`
+        : `
+NULL scd_valid_from,
+NULL scd_valid_to,
+1 is_active,
+NULL processing_timestamp
+`
+    ).trim(), 4)}
+`;
+
+    const fromBlock = isFact
+        ? `
+FROM ranked
+WHERE rn = 1
+`
+        : `
+FROM ice.silver.${params.tableNameLower}
+GROUP BY
+${indent(params.dimensionColumnTransform, 4)}
+`;
+
+    return (factCTE + selectBlock + fromBlock).trim();
 }
 
+// export function transformSQLContent(params: TransformParams): SQLQuery {
+// 	const transformSqlTemplate = `SELECT 
+//             ${params.goldColumnTransform != ""? `${params.goldColumnTransform},`: ""}
+
+
+//             ${params.tableType == "fact" ? `
+//                     year,
+//                     month,
+//                     day,
+//                     hour
+//             `: `
+//                 NULL scd_valid_from,
+//                 NULL scd_valid_to,
+//                 1 is_active,
+//                 NULL processing_timestamp
+//             `}
+
+//           FROM ice.silver.${params.tableNameLower}
+//           ${params.tableType == "fact" ? `WHERE year = ''\${year}'' 
+//                     AND month = ''\${month}'' 
+//                     AND day = ''\${day}''
+//                     AND hour = ''\${hour}''
+//           `: ''}
+//           GROUP BY 
+//               ${params.dimensionColumnTransform}
+//               ${params.tableType == "fact"? `,
+//                     year,
+//                     month,
+//                     day,
+//                     hour`: ""}
+//       `;
+// 	return transformSqlTemplate.trim();
+// }
+
 export function goldConfig(params: ConfigParams): SQLQuery {
-	const goldConfigTemplate = `INSERT INTO etl_table_config (
+    const goldConfigTemplate = `INSERT INTO etl_table_config (
             layer,
             source_table_name,
             target_table_name,
@@ -141,13 +205,13 @@ export function goldConfig(params: ConfigParams): SQLQuery {
             updated_at = CURRENT_TIMESTAMP,
             updated_by = '${params.createdBy}';
     `
-	return goldConfigTemplate.trim();
+    return goldConfigTemplate.trim();
 }
 
 export function silverDDL(params: DDLParams): SQLQuery {
-	const DDL = `CREATE TABLE IF NOT EXISTS silver.${params.tableName} (
+    const DDL = `CREATE TABLE IF NOT EXISTS silver.${params.tableName} (
             
-            ${params.allColumnsDefinitions != ""? `${params.allColumnsDefinitions},` : ""}
+            ${params.allColumnsDefinitions != "" ? `${params.allColumnsDefinitions},` : ""}
 
             offset BIGINT,
             year STRING,
@@ -162,25 +226,25 @@ export function silverDDL(params: DDLParams): SQLQuery {
         ''write.target-file-size-bytes''=''134217728''
         )
     `;
-	return DDL.trim();
+    return DDL.trim();
 }
 
 
 /**
  * -- ============================================================================
-		-- SILVER LAYER CONFIG - ${params.tableNameUpper}
-		-- Generated at: ${datetimeNow()}
-		-- Schema Registry: ${params.schemaRegistryUrl}
-		-- Subject: altibase_raw-${params.tableNameUpper}
-		-- Total fields: $($Schema.fields.Count)
-		-- ============================================================================
+        -- SILVER LAYER CONFIG - ${params.tableNameUpper}
+        -- Generated at: ${datetimeNow()}
+        -- Schema Registry: ${params.schemaRegistryUrl}
+        -- Subject: altibase_raw-${params.tableNameUpper}
+        -- Total fields: $($Schema.fields.Count)
+        -- ============================================================================
  * @param params 
  * 
  * @returns SQL Insert Query to etl-config-table
  */
 
 export function silverConfig(params: ConfigParams): SQLQuery {
-	const silverTableConfigTemplate = `INSERT INTO etl_table_config (
+    const silverTableConfigTemplate = `INSERT INTO etl_table_config (
             layer,
             source_table_name,
             target_table_name,
@@ -227,5 +291,5 @@ export function silverConfig(params: ConfigParams): SQLQuery {
 
     `;
 
-	return silverTableConfigTemplate.trim();
+    return silverTableConfigTemplate.trim();
 }

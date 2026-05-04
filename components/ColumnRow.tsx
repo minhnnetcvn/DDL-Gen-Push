@@ -61,6 +61,7 @@ export function ColumnRow({ row, onUpdate, onRemove, canRemove }: ColumnRowProps
                         <SelectItem value="FIRST_VALUE">FIRST VALUE</SelectItem>
                         <SelectItem value="LAST_VALUE">LAST VALUE</SelectItem>
                         <SelectItem value="ANY_VALUE">ANY VALUE</SelectItem>
+                        <SelectItem value="PK">Key</SelectItem>
                         <SelectItem value="NONE">None</SelectItem>
                     </SelectContent>
                 </Select>
