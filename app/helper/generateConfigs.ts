@@ -68,9 +68,6 @@ export function transformSQLContent(params: TransformParams): SQLQuery {
             .map(line => line ? " ".repeat(spaces) + line : line)
             .join("\n");
 
-    const goldCols = params.goldColumnTransform
-        ? `${params.goldColumnTransform},\n`
-        : "";
 
     const factCTE = isFact
         ? `
@@ -83,10 +80,10 @@ SELECT
         ORDER BY LastUpdated DESC
     ) AS rn
 FROM ice.silver.${params.tableNameLower}
-WHERE year = '\${year}'
-  AND month = '\${month}'
-  AND day = '\${day}'
-  AND hour = '\${hour}'
+WHERE year = ''\${year}''
+  AND month = ''\${month}''
+  AND day = ''\${day}''
+  AND hour = ''\${hour}''
 `, 4)}
 )
 `
@@ -94,7 +91,7 @@ WHERE year = '\${year}'
 
     const selectBlock = `
 SELECT
-${indent(goldCols + (isFact
+${indent(params.goldColumnTransform + ',\n' + (isFact
         ? `
 year,
 month,

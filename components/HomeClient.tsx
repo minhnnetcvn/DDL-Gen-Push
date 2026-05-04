@@ -26,7 +26,7 @@ export default function HomePage({ defaultKafkaIp, defaultConnectionString, TLSE
 	const [sqlContentSilver, setSQLContentSilver] = useState("");
 
 
-	const [showColumnsConfig, setShowColumnsConfig] = useState(true);
+	const [showColumnsConfig, setShowColumnsConfig] = useState(false);
 	const [showPostgresForm, setShowPostgresForm] = useState(false);
 
 	const username = useUsername();
